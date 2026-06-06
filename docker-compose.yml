@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  tamilrockers:
+    build: .
+    container_name: tamilrockers
+    restart: no
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      TAMILROCKERSURL: ${TAMILROCKERSURL}
+      #IP: ${IP}
+      QBITIP: ${QBITIP}
+      QBITUSER: ${QBITUSER}
+      QBITPASS: ${QBITPASS}
+      HA_WEBHOOK_URL: ${HA_WEBHOOK_URL} #triggering next app after complting current app tasks
+      HA_WEBHOOKERROR_URL: ${HA_WEBHOOKERROR_URL}
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+
+
+
+
+
