@@ -55,12 +55,12 @@ async function main() {
       // await deleteLargePirateBayTorrents();
       // await delay(1000);
       console.log("Process completed: movie magnets are saved in DB and added to qBittorrent");
-      await retry(
-        triggerHomeAssistantWebhook,
-        { status: "success" },
-        "homeassistant-success",
-        5
-      );
+      // await retry(
+      //   triggerHomeAssistantWebhook,
+      //   { status: "success" },
+      //   "homeassistant-success",
+      //   5
+      // );
       
     }
 
