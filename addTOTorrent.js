@@ -9,12 +9,19 @@ export async function addToTorrent() {
   try {
    
 
-    const result = await pool.query(`
-     SELECT *
-FROM piratebay_movie_magnets
-WHERE sent_to_qbittorrent = FALSE
-ORDER BY created_at ASC
-    `);
+const result = await pool.query(
+  `
+  SELECT *
+  FROM piratebay_movie_magnets
+  WHERE sent_to_qbittorrent = FALSE
+    AND (
+      size IS NULL
+      OR CAST(size AS BIGINT) < $1
+    )
+  ORDER BY created_at ASC
+  `,
+  [3221225472]
+);
 
     const rows = result.rows;
 
