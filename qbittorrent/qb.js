@@ -34,7 +34,7 @@ export async function addMagnet(
   const params = new URLSearchParams({
     urls: magnet,
     category,
-    tags: [...MOVIE_TAGS].join(",")
+    tags: [...MOVIE_TAGS,`piratebay.${today}`].join(",")
   });
 
   if (title) {
