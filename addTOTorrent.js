@@ -9,19 +9,35 @@ export async function addToTorrent() {
   try {
    
 
-const result = await pool.query(
-  `
+const MIN_MOVIE_YEAR = 2025;
+
+const result = await pool.query(`
   SELECT *
   FROM piratebay_movie_magnets
   WHERE sent_to_qbittorrent = FALSE
     AND (
-      size IS NULL
-      OR CAST(size AS BIGINT) < $1
+      (
+        media_type = 'tv'
+        AND (
+          size IS NULL
+          OR CAST(size AS BIGINT) < 2147483648
+        )
+      )
+      OR
+      (
+        media_type = 'movie'
+        AND (
+          size IS NULL
+          OR CAST(size AS BIGINT) < 3221225472
+        )
+        AND CAST(
+          substring(title FROM '(19|20)[0-9]{2}')
+          AS INTEGER
+        ) >= $1
+      )
     )
   ORDER BY created_at ASC
-  `,
-  [3221225472]
-);
+`, [MIN_MOVIE_YEAR]);
 
     const rows = result.rows;
 
