@@ -7,7 +7,7 @@ import { delay } from "../delay.js";
 dotenv.config();
 
 const jar = new CookieJar();
-const MOVIE_TAGS = ["piratebay", "movies", "category-200", "auto"];
+const MOVIE_TAGS = ["piratebay"];
 
 export const qb = wrapper(axios.create({
   baseURL: process.env.QBITIP,
@@ -65,4 +65,24 @@ export async function moveTorrentToTop() {
   );
 
   console.log(`Moved ${addedTorrents.length} Pirate Bay movie torrents to top.`);
+}
+
+
+export async function isQBittorrentAvailable() {
+  try {
+    await loginQB();
+
+    const { data } = await qb.get("/api/v2/app/version");
+
+    console.log(`qBittorrent version: ${data}`);
+
+    return true;
+  } catch (error) {
+    console.error(
+      "qBittorrent unavailable:",
+      error.response?.data || error.message
+    );
+
+    return false;
+  }
 }

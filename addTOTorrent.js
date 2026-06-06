@@ -10,9 +10,10 @@ export async function addToTorrent() {
    
 
     const result = await pool.query(`
-      SELECT * FROM piratebay_movie_magnets
-      WHERE created_at >= NOW() - INTERVAL '3 hours'
-      ORDER BY created_at DESC
+     SELECT *
+FROM piratebay_movie_magnets
+WHERE sent_to_qbittorrent = FALSE
+ORDER BY created_at ASC
     `);
 
     const rows = result.rows;
@@ -21,7 +22,18 @@ export async function addToTorrent() {
     console.log("adding torrents from DB");
 
     for (const value of rows) {
-      await addMagnet(value.magnet, value.title);
+ try {
+  await addMagnet(value.magnet, value.title);
+
+  await pool.query(
+    `UPDATE piratebay_movie_magnets
+     SET sent_to_qbittorrent = TRUE
+     WHERE id = $1`,
+    [value.id]
+  );
+} catch (error) {
+  console.error(`Failed to add: ${value.title}`);
+}
     }
 
     console.log("adding complete");

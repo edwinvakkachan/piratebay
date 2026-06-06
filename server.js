@@ -12,6 +12,7 @@ import { retry } from "./homeassistant/retryWrapper.js";
 import { publishMessage } from "./queue/publishMessage.js";
 import { initDB } from "./db/db.js";
 import { saveMagnets } from "./db/saveMagnets.js";
+import { isQBittorrentAvailable } from "./qbittorrent/qb.js";
 
 async function main() {
   try {
@@ -47,20 +48,23 @@ async function main() {
     await saveMagnets(torrents);
 
     await delay(1000);
-    await addToTorrent();
-    await delay(5000);
-    await deleteLargePirateBayTorrents();
+    const result = await isQBittorrentAvailable();
+    if(result){
+      await addToTorrent();
+      await delay(1000);
+      await deleteLargePirateBayTorrents();
+      await delay(1000);
+      console.log("Process completed: movie magnets are saved in DB and added to qBittorrent");
+      await retry(
+        triggerHomeAssistantWebhook,
+        { status: "success" },
+        "homeassistant-success",
+        5
+      );
+      
+    }
 
-    await delay(1000);
 
-    console.log("Process completed: movie magnets are saved in DB and added to qBittorrent");
-
-    await retry(
-      triggerHomeAssistantWebhook,
-      { status: "success" },
-      "homeassistant-success",
-      5
-    );
 
     await publishMessage({
       message: "Pirate Bay movie scraping completed successfully"
