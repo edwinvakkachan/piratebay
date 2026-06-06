@@ -27,19 +27,13 @@ async function getFinalUrl(url) {
 }
 
 
-// Extract Domain
-function extractDomain(url) {
-  return new URL(url).origin;
-}
-
-
 // Core Logic
 export async function checkDomain() {
 let result;
 try {
      result = await pool.query(
-      "SELECT value FROM settings WHERE key = $1",
-      ["current_domain"]
+      "SELECT value FROM piratebay_movie_settings WHERE key = $1",
+      ["search_url"]
     );
 } catch (error) {
   console.error('current domain db check error',error);
@@ -61,21 +55,21 @@ try {
     return;
   }
 
-  const currentDomain = result.rows[0].value;
+  const currentUrl = result.rows[0].value;
 
-  console.log(`[${new Date().toISOString()}] Checking ${currentDomain}`);
+  console.log(`[${new Date().toISOString()}] Checking ${currentUrl}`);
 
-  const finalUrl = await getFinalUrl(currentDomain);
+  const finalUrl = await getFinalUrl(currentUrl);
   if (!finalUrl) return;
 
-  const newDomain = extractDomain(finalUrl);
+  const newUrl = finalUrl;
 
-  if (newDomain !== currentDomain) {
+  if (newUrl !== currentUrl) {
 
   try {
       await pool.query(
-        "UPDATE settings SET value = $1, updated_at = CURRENT_TIMESTAMP WHERE key = $2",
-        [newDomain, "current_domain"]
+        "UPDATE piratebay_movie_settings SET value = $1, updated_at = CURRENT_TIMESTAMP WHERE key = $2",
+        [newUrl, "search_url"]
       );
   } catch (error) {
     console.error('checking old and new domain db error',error)
@@ -92,8 +86,8 @@ try {
     const message = `
 🚨 *Domain Updated*
 
-Old: ${currentDomain}
-New: ${newDomain}
+Old: ${currentUrl}
+New: ${newUrl}
 Time: ${new Date().toLocaleString()}
 `;
 
@@ -101,7 +95,7 @@ Time: ${new Date().toLocaleString()}
   message: message
 });
 
-    console.log("Domain updated in DB:", newDomain);
+    console.log("Pirate Bay movie search URL updated in DB:", newUrl);
 
     return true;
   } else {

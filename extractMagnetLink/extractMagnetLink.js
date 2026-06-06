@@ -54,7 +54,7 @@ export async function extractPage(movieUrl) {
       console.log('Total no of magnet link found is:',magnetArray.length);
 try {
   await pool.query(
-  "DELETE FROM processed_links WHERE href = $1",
+  "DELETE FROM piratebay_movie_processed_links WHERE href = $1",
   [movieUrl]
 );
 } catch (error) {

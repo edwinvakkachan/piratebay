@@ -2,10 +2,12 @@ import axios from "axios";
 import { wrapper } from "axios-cookiejar-support";
 import { CookieJar } from "tough-cookie";
 import dotenv from "dotenv";
-dotenv.config();
 import { delay } from "../delay.js";
 
+dotenv.config();
+
 const jar = new CookieJar();
+const MOVIE_TAGS = ["piratebay", "movies", "category-200", "auto"];
 
 export const qb = wrapper(axios.create({
   baseURL: process.env.QBITIP,
@@ -14,7 +16,8 @@ export const qb = wrapper(axios.create({
 }));
 
 export async function loginQB() {
-  await qb.post("/api/v2/auth/login", 
+  await qb.post(
+    "/api/v2/auth/login",
     new URLSearchParams({
       username: process.env.QBITUSER,
       password: process.env.QBITPASS
@@ -23,49 +26,43 @@ export async function loginQB() {
 }
 
 export async function addMagnet(magnet, title = "") {
-
-  const today = new Date().toISOString().split("T")[0]; 
+  const today = new Date().toISOString().split("T")[0];
   const params = new URLSearchParams({
     urls: magnet,
     category: "movies",
-    tags: `piratebay,movies,category-200,auto,${today}`
+    tags: [...MOVIE_TAGS, today].join(",")
   });
 
   if (title) {
     params.set("rename", title);
   }
 
-  await qb.post("/api/v2/torrents/add",
-    params
-  );
+  await qb.post("/api/v2/torrents/add", params);
 }
 
 export async function moveTorrentToTop() {
   const today = new Date().toISOString().split("T")[0];
+  const expectedTags = [...MOVIE_TAGS, today];
 
   const { data: torrents } = await qb.get("/api/v2/torrents/info");
 
-  // Get ALL torrents added today (by tag)
-  const addedTorrents = torrents.filter(t =>
-    t.tags && t.tags.includes(today)
+  const addedTorrents = torrents.filter((torrent) =>
+    expectedTags.every((tag) => torrent.tags && torrent.tags.includes(tag))
   );
 
   if (addedTorrents.length === 0) {
-    console.log("❌ No torrents found to move.");
+    console.log("No Pirate Bay movie torrents found to move.");
     return;
   }
 
-  // Collect all hashes
-  const hashes = addedTorrents.map(t => t.hash).join("|");
+  const hashes = addedTorrents.map((torrent) => torrent.hash).join("|");
 
   await delay(2000);
 
   await qb.post(
     "/api/v2/torrents/topPrio",
-    new URLSearchParams({
-      hashes
-    })
+    new URLSearchParams({ hashes })
   );
 
-  console.log(`✅ Moved ${addedTorrents.length} torrents to top.`);
+  console.log(`Moved ${addedTorrents.length} Pirate Bay movie torrents to top.`);
 }

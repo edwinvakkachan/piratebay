@@ -111,5 +111,3 @@ export async function scrapePirateBayMovieMagnets() {
     return [];
   }
 }
-
-export const scrapeMalayalamLinks = scrapePirateBayMovieMagnets;

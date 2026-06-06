@@ -1,137 +1,83 @@
-import 'dotenv/config';
-import { extractPage } from "./extractMagnetLink/extractMagnetLink.js";
-import { scrapeMalayalamLinks } from "./extractHomePage.js";
-import { addToTorrent} from "./addTOTorrent.js";
-import { checkDomain } from "./domainTracker.js";
+import "dotenv/config";
+import { scrapePirateBayMovieMagnets } from "./extractHomePage.js";
+import { addToTorrent } from "./addTOTorrent.js";
 import { delay } from "./delay.js";
-import { triggerHomeAssistantWebhook,triggerHomeAssistantWebhookWhenErrorOccurs } from "./homeassistant/homeAssistantWebhook.js";
-import { insertLinkIfNew } from "./db/db.js";
+import {
+  triggerHomeAssistantWebhook,
+  triggerHomeAssistantWebhookWhenErrorOccurs
+} from "./homeassistant/homeAssistantWebhook.js";
 import { log } from "./timelog.js";
 import { retry } from "./homeassistant/retryWrapper.js";
 import { publishMessage } from "./queue/publishMessage.js";
 import { initDB } from "./db/db.js";
-
-
-
+import { saveMagnets } from "./db/saveMagnets.js";
 
 async function main() {
   try {
+    await log();
 
-await log();
-    console.log("🚀  tamilrockers scraping Process started");
-           
+    console.log("Pirate Bay movie scraping process started");
     await publishMessage({
-  message: "🚀  tamilrockers scraping Process started"
-});
+      message: "Pirate Bay movie scraping process started"
+    });
+
     await initDB();
+    console.log("db is ready");
 
-    console.log('db is ready');
+    await delay(1000);
 
-   const result = await checkDomain();
+    const torrents = await scrapePirateBayMovieMagnets();
 
-    if(result){
-      console.log('♻️♻️♻️since domain changed, no logs will be displayed');
-       await publishMessage({
-message: `♻️♻️♻️ since domain changed, no logs will be displayed`
-});
-    }
-
-   await delay(1000)
-
-    const links = await scrapeMalayalamLinks();
-
-    // console.log(links)
-
-
-
-    if (!links || links.size === 0) {
-      console.log("💥 No links found.");
-              await publishMessage({
-  message: "💥 No links found."
-});
+    if (!torrents || torrents.length === 0) {
+      console.log("No Pirate Bay movie magnets found.");
+      await publishMessage({
+        message: "No Pirate Bay movie magnets found."
+      });
       await retry(
-  triggerHomeAssistantWebhookWhenErrorOccurs,
-  { status: "error" },
-  "homeassistant-error",
-  5
-);
+        triggerHomeAssistantWebhookWhenErrorOccurs,
+        { status: "error" },
+        "homeassistant-error",
+        5
+      );
       return;
     }
 
-    
-    console.log(`💤💤💤 it will take 5 minutes to complete `);
+    console.log(`Saving ${torrents.length} Pirate Bay movie magnets`);
+    await saveMagnets(torrents);
 
-
-
-    for (const value of links) {
-  try {
-    const isNew = await insertLinkIfNew(value);
-
-    if (!isNew) {
-      // console.log("⏩ Skipping already processed:", value);
-      continue;
-    }
-
-if(!result){
-
-  console.log("🫛 🆕 New link:", value);
-      await publishMessage({
-message: `🆕 🫛 New link: ${value}`
-});
-
-}
-
-
-    await extractPage(value);
-
-  } catch (err) {
-    console.error(`Error processing link: ${value}`);
-    console.error(err.message);
-            await publishMessage({
-  message: "❌ Error processing link "
-});
-  }
-}
-
-
-   await delay(1000);
+    await delay(1000);
     await addToTorrent();
 
-    await delay(1000)
+    await delay(1000);
 
-    console.log("🆗 Process completed and links are saved in db and added inside the torrent");
-  
+    console.log("Process completed: movie magnets are saved in DB and added to qBittorrent");
+
     await retry(
-  triggerHomeAssistantWebhook,
-  { status: "success" },
-  "homeassistant-success",
-  5
-);
+      triggerHomeAssistantWebhook,
+      { status: "success" },
+      "homeassistant-success",
+      5
+    );
 
+    await publishMessage({
+      message: "Pirate Bay movie scraping completed successfully"
+    });
 
-            await publishMessage({
-  message: 'tramil rockers scraping completed successfully 💯'
-});
-
-await log();
-
-process.exit(0)
-
+    await log();
   } catch (error) {
     console.error("Fatal error in main():");
     console.error(error);
 
-            await publishMessage({
-  message: "❌  Fatal error in main():"
-});
+    await publishMessage({
+      message: "Fatal error in main()"
+    });
 
-      await retry(
-  triggerHomeAssistantWebhookWhenErrorOccurs,
-  { status: "error" },
-  "homeassistant-error",
-  5
-);
-
+    await retry(
+      triggerHomeAssistantWebhookWhenErrorOccurs,
+      { status: "error" },
+      "homeassistant-error",
+      5
+    );
   }
 }
 
