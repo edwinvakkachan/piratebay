@@ -40,13 +40,50 @@ const result = await pool.query(`
 `, [MIN_MOVIE_YEAR]);
 
     const rows = result.rows;
+const episodeMap = new Map();
+
+for (const row of rows) {
+  if (row.media_type !== "tv") {
+    episodeMap.set(`movie-${row.id}`, row);
+    continue;
+  }
+
+  const match = row.title.match(/S(\d+)E(\d+)/i);
+
+  if (!match) {
+    episodeMap.set(`tv-${row.id}`, row);
+    continue;
+  }
+
+const showName = row.title
+  .replace(/S\d+E\d+.*/i, "")
+  .trim()
+  .toLowerCase();
+
+const key = `${showName}-S${match[1]}E${match[2]}`;
+
+  const existing = episodeMap.get(key);
+
+  if (
+    !existing ||
+    Number(row.seeders) > Number(existing.seeders)
+  ) {
+    episodeMap.set(key, row);
+  }
+}
+
+const filteredRows = [...episodeMap.values()];
+
+
+
+
 
     await loginQB();
     console.log("adding torrents from DB");
 
-    for (const value of rows) {
+    for (const value of filteredRows) {
  try {
-  
+
   const category =
   value.media_type === "tv"
     ? "qbit4tbTV"
