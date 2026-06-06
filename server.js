@@ -1,7 +1,8 @@
 import "dotenv/config";
 import { scrapePirateBayMovieMagnets } from "./extractHomePage.js";
-import { addToTorrent } from "./addTOTorrent.js";
+import { addToTorrent  } from "./addTOTorrent.js";
 import { delay } from "./delay.js";
+import { deleteLargePirateBayTorrents } from "./qbittorrent/torrentCleanUp.js";
 import {
   triggerHomeAssistantWebhook,
   triggerHomeAssistantWebhookWhenErrorOccurs
@@ -47,6 +48,8 @@ async function main() {
 
     await delay(1000);
     await addToTorrent();
+    await delay(5000);
+    await deleteLargePirateBayTorrents();
 
     await delay(1000);
 

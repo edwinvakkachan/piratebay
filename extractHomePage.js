@@ -1,113 +1,74 @@
 import axios from "axios";
-import { load } from "cheerio";
 import { getSearchUrl } from "./getBaseUrlFromDB.js";
-import { delay } from "./delay.js";
 import { publishMessage } from "./queue/publishMessage.js";
 
-function toAbsoluteUrl(href, baseUrl) {
-  if (!href) return null;
-  return href.startsWith("http") ? href : new URL(href, baseUrl).href;
-}
+function buildApiUrl(searchUrl) {
+  try {
+    const url = new URL(searchUrl);
 
-function parseCount(value) {
-  const count = Number.parseInt(String(value || "").replace(/[^\d]/g, ""), 10);
-  return Number.isNaN(count) ? null : count;
-}
+    const query = url.searchParams.get("q");
 
-function extractSize(text) {
-  const match =
-    text.match(/Size\s+([0-9.]+\s*(KiB|MiB|GiB|TiB|KB|MB|GB|TB))/i) ||
-    text.match(/\b([0-9.]+\s*(KiB|MiB|GiB|TiB|KB|MB|GB|TB))\b/i);
+    if (!query) {
+      throw new Error("No search query found in URL");
+    }
 
-  return match ? match[1].replace(/\s+/g, " ").trim() : null;
-}
-
-function extractTitle($, magnetElement, row) {
-  const titleFromRow = row
-    .find("a.detLink, a[href*='/torrent/'], a[href*='/description.php']")
-    .first()
-    .text()
-    .replace(/\s+/g, " ")
-    .trim();
-
-  if (titleFromRow) return titleFromRow;
-
-  return $(magnetElement)
-    .closest("tr, li, div")
-    .text()
-    .replace(/\s+/g, " ")
-    .trim() || "Pirate Bay movie";
-}
-
-function extractSourceUrl($, row, searchUrl) {
-  const rawHref = row
-    .find("a.detLink, a[href*='/torrent/'], a[href*='/description.php']")
-    .first()
-    .attr("href");
-
-  return toAbsoluteUrl(rawHref, searchUrl);
-}
-
-function extractSeedStats($, row) {
-  const numericCells = row
-    .find("td")
-    .map((_, cell) => parseCount($(cell).text()))
-    .get()
-    .filter((value) => value !== null);
-
-  if (numericCells.length >= 2) {
-    return {
-      seeders: numericCells[numericCells.length - 2],
-      leechers: numericCells[numericCells.length - 1]
-    };
+    return `https://apibay.org/q.php?q=${encodeURIComponent(query)}`;
+  } catch (err) {
+    throw new Error(`Unable to build API URL: ${err.message}`);
   }
-
-  return { seeders: null, leechers: null };
 }
 
 export async function scrapePirateBayMovieMagnets() {
   try {
     const searchUrl = await getSearchUrl();
 
-    console.log(`Current Pirate Bay movie search URL is: ${searchUrl}`);
+    console.log(`Current search URL: ${searchUrl}`);
+
+    const apiUrl = buildApiUrl(searchUrl);
+
+    console.log(`Using API URL: ${apiUrl}`);
+
     await publishMessage({
-      message: `Current Pirate Bay movie search URL is: ${searchUrl}`
+      message: `Using Pirate Bay API: ${apiUrl}`
     });
 
-    const { data } = await axios.get(searchUrl, {
+    const { data } = await axios.get(apiUrl, {
+      timeout: 30000,
       headers: {
-        "User-Agent": "Mozilla/5.0"
-      },
-      timeout: 10000
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/137.0.0.0 Safari/537.36"
+      }
     });
 
-    const $ = load(data);
-    const torrentsByMagnet = new Map();
+    if (!Array.isArray(data)) {
+      console.error("API returned invalid data");
+      return [];
+    }
 
-    $("a[href^='magnet:?']").each((_, element) => {
-      const magnet = $(element).attr("href");
-      if (!magnet) return;
+    const torrents = data
+      .filter(
+        (item) =>
+          item.info_hash &&
+          item.info_hash !== "0000000000000000000000000000000000000000"
+      )
+      .map((item) => ({
+        title: item.name,
+        magnet:
+          `magnet:?xt=urn:btih:${item.info_hash}` +
+          `&dn=${encodeURIComponent(item.name)}`,
+        sourceUrl: `https://thepiratebay.org/description.php?id=${item.id}`,
+        size: item.size,
+        seeders: Number(item.seeders || 0),
+        leechers: Number(item.leechers || 0)
+      }));
 
-      const row = $(element).closest("tr, li, div");
-      const rowText = row.text().replace(/\s+/g, " ").trim();
-      const { seeders, leechers } = extractSeedStats($, row);
+    console.log(
+      `Total Pirate Bay movie magnets found: ${torrents.length}`
+    );
 
-      torrentsByMagnet.set(magnet, {
-        title: extractTitle($, element, row),
-        magnet,
-        sourceUrl: extractSourceUrl($, row, searchUrl),
-        size: extractSize(rowText),
-        seeders,
-        leechers
-      });
-    });
-
-    const torrents = [...torrentsByMagnet.values()];
-    console.log(`Total Pirate Bay movie magnets found: ${torrents.length}`);
-    await delay(1000, true);
     return torrents;
   } catch (error) {
-    console.error("Pirate Bay movie scrape error:", error.message);
+    console.error("Pirate Bay API error:", error.message);
     return [];
   }
 }

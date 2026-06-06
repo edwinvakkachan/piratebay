@@ -129,3 +129,33 @@ export async function cleanupTodayTorrents() {
     }
   }
 }
+
+
+const THREE_GB = 3 * 1024 * 1024 * 1024;
+
+export async function deleteLargePirateBayTorrents() {
+  const torrents = await getTorrentsByTag("piratebay");
+
+  const largeTorrents = torrents.filter(
+    torrent => torrent.size > THREE_GB
+  );
+
+  if (!largeTorrents.length) {
+    console.log("No piratebay torrents larger than 3GB.");
+    return;
+  }
+
+  largeTorrents.forEach(t => {
+    console.log(
+      `DELETE: ${t.name} (${(t.size / 1024 / 1024 / 1024).toFixed(2)} GB)`
+    );
+  });
+
+  await deleteTorrents(
+    largeTorrents.map(t => t.hash)
+  );
+
+  await publishMessage({
+    message: `Deleted ${largeTorrents.length} piratebay torrents larger than 3GB`
+  });
+}
