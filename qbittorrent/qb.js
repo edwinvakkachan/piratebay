@@ -25,11 +25,15 @@ export async function loginQB() {
   );
 }
 
-export async function addMagnet(magnet, title = "") {
+export async function addMagnet(
+  magnet,
+  title="",
+  category
+) {
   const today = new Date().toISOString().split("T")[0];
   const params = new URLSearchParams({
     urls: magnet,
-    category: "movies",
+    category,
     tags: [...MOVIE_TAGS, today].join(",")
   });
 

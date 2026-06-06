@@ -46,7 +46,17 @@ const result = await pool.query(`
 
     for (const value of rows) {
  try {
-  await addMagnet(value.magnet, value.title);
+  
+  const category =
+  value.media_type === "tv"
+    ? "qbit4tbTV"
+    : "2tbEnglish";
+
+await addMagnet(
+  value.magnet,
+  value.title,
+  category
+);
 
   await pool.query(
     `UPDATE piratebay_movie_magnets
