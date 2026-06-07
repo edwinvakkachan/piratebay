@@ -15,6 +15,7 @@ const result = await pool.query(`
   SELECT *
   FROM piratebay_movie_magnets
   WHERE sent_to_qbittorrent = FALSE
+  AND COALESCE(skipped_duplicate,FALSE) = FALSE
     AND (
       (
         media_type = 'tv'
@@ -72,12 +73,21 @@ const key = `${showName}-S${match[1]}E${match[2]}`;
 
   const existing = episodeMap.get(key);
 
-  if (
-    !existing ||
-    Number(row.seeders) > Number(existing.seeders)
-  ) {
-    episodeMap.set(key, row);
-  }
+  const episodeMap = new Map();
+const duplicateIds = [];
+
+ if (!existing) {
+  episodeMap.set(key, row);
+} else if (
+  Number(row.seeders) > Number(existing.seeders)
+) {
+  duplicateIds.push(existing.id);
+  episodeMap.set(key, row);
+} else {
+  duplicateIds.push(row.id);
+}
+
+
 }
 
 const filteredRows = [...episodeMap.values()];
@@ -85,6 +95,23 @@ const filteredRows = [...episodeMap.values()];
 console.log(
   `Original: ${rows.length}, Filtered: ${filteredRows.length}`
 );
+
+
+
+if (duplicateIds.length > 0) {
+  await pool.query(
+    `
+    UPDATE piratebay_movie_magnets
+    SET skipped_duplicate = TRUE
+    WHERE id = ANY($1)
+    `,
+    [duplicateIds]
+  );
+
+  console.log(
+    `Marked ${duplicateIds.length} duplicates`
+  );
+}
 
     await loginQB();
     console.log("adding torrents from DB");
