@@ -55,12 +55,18 @@ for (const row of rows) {
     continue;
   }
 
-const showName = row.title
-  .replace(/S\d+E\d+.*/i, "")
-  .replace(/[._-]/g, " ")
-  .replace(/\s+/g, " ")
-  .trim()
-  .toLowerCase();
+function normalizeShowName(title) {
+  return title
+    .replace(/\.(720p|1080p|2160p).*/i, "")
+    .replace(/\b(720p|1080p|2160p)\b.*/i, "")
+    .replace(/S\d+E\d+.*/i, "")
+    .replace(/[._-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+const showName = normalizeShowName(row.title);
 
 const key = `${showName}-S${match[1]}E${match[2]}`;
 
