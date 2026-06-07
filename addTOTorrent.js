@@ -42,6 +42,7 @@ const result = await pool.query(`
 
     const rows = result.rows;
 const episodeMap = new Map();
+const duplicateIds = [];
 
 for (const row of rows) {
   if (row.media_type !== "tv") {
@@ -73,8 +74,7 @@ const key = `${showName}-S${match[1]}E${match[2]}`;
 
   const existing = episodeMap.get(key);
 
-  const episodeMap = new Map();
-const duplicateIds = [];
+
 
  if (!existing) {
   episodeMap.set(key, row);
