@@ -3,6 +3,52 @@ import { loginQB, addMagnet,moveTorrentToTop } from "./qbittorrent/qb.js";
 import pool from "./db/pool.js";
 import { delay } from "./delay.js";
 
+function getSeasonKey(title) {
+  const seasonMatch = title.match(
+    /(season\s*(\d+)|s(\d+))/i
+  );
+
+  if (!seasonMatch) return null;
+
+  const season =
+    seasonMatch[2] || seasonMatch[3];
+
+  const showName = title
+    .replace(/season\s*\d+.*/i, "")
+    .replace(/s\d+.*/i, "")
+    .replace(/[._-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+  return `${showName}-season-${season}`;
+}
+
+function getEpisodeKey(title) {
+  const match = title.match(/S(\d+)E(\d+)/i);
+
+  if (!match) return null;
+
+  const showName = title
+    .replace(/S\d+E\d+.*/i, "")
+    .replace(/[._-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+  return `${showName}-s${match[1]}e${match[2]}`;
+}
+
+function normalizeShowName(title) {
+  return title
+    .replace(/\.(720p|1080p|2160p).*/i, "")
+    .replace(/\b(720p|1080p|2160p)\b.*/i, "")
+    .replace(/S\d+E\d+.*/i, "")
+    .replace(/[._-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
 
 
 export async function addToTorrent() {
@@ -57,16 +103,7 @@ for (const row of rows) {
     continue;
   }
 
-function normalizeShowName(title) {
-  return title
-    .replace(/\.(720p|1080p|2160p).*/i, "")
-    .replace(/\b(720p|1080p|2160p)\b.*/i, "")
-    .replace(/S\d+E\d+.*/i, "")
-    .replace(/[._-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
+
 
 const showName = normalizeShowName(row.title);
 
@@ -99,14 +136,15 @@ console.log(
 
 
 if (duplicateIds.length > 0) {
-  await pool.query(
-    `
-    UPDATE piratebay_movie_magnets
-    SET skipped_duplicate = TRUE
-    WHERE id = ANY($1)
-    `,
-    [duplicateIds]
-  );
+ await pool.query(
+`
+UPDATE piratebay_movie_magnets
+SET skipped_duplicate = TRUE,
+    sent_to_qbittorrent = TRUE
+WHERE id = ANY($1)
+`,
+[duplicateIds]
+);
 
   console.log(
     `Marked ${duplicateIds.length} duplicates`
@@ -124,11 +162,104 @@ if (duplicateIds.length > 0) {
     ? "qbit4tbTV"
     : "2tbEnglish";
 
+const episodeKey = getEpisodeKey(value.title);
+
+if (episodeKey) {
+  const exists = await pool.query(
+    `
+    SELECT 1
+    FROM downloaded_episodes
+    WHERE episode_key = $1
+    `,
+    [episodeKey]
+  );
+
+  if (exists.rowCount > 0) {
+    console.log(`Already downloaded: ${episodeKey}`);
+
+    await pool.query(
+      `
+      UPDATE piratebay_movie_magnets
+SET skipped_duplicate = TRUE,
+    sent_to_qbittorrent = TRUE
+WHERE id = $1
+      `,
+      [value.id]
+    );
+
+    continue;
+  }
+}
+//checking for sessional pack 
+
+const isSeasonPack =
+  /complete|season pack|full season|complete series|full series/i.test(
+    value.title
+  );
+
+const seasonKey = getSeasonKey(value.title);
+
+if (isSeasonPack && seasonKey) {
+  const exists = await pool.query(
+    `
+    SELECT 1
+    FROM downloaded_seasons
+    WHERE season_key = $1
+    `,
+    [seasonKey]
+  );
+
+  if (exists.rowCount > 0) {
+    console.log(
+      `Season already downloaded: ${seasonKey}`
+    );
+
+    await pool.query(
+      `
+      UPDATE piratebay_movie_magnets
+      SET skipped_duplicate = TRUE,
+          sent_to_qbittorrent = TRUE
+      WHERE id = $1
+      `,
+      [value.id]
+    );
+
+    continue;
+  }
+}
+
+
+
+
 await addMagnet(
   value.magnet,
   value.title,
   category
 );
+
+
+if (isSeasonPack && seasonKey) {
+  await pool.query(
+    `
+    INSERT INTO downloaded_seasons
+    (season_key)
+    VALUES ($1)
+    ON CONFLICT DO NOTHING
+    `,
+    [seasonKey]
+  );
+}
+
+if (episodeKey) {
+  await pool.query(
+    `
+    INSERT INTO downloaded_episodes (episode_key)
+    VALUES ($1)
+    ON CONFLICT DO NOTHING
+    `,
+    [episodeKey]
+  );
+}
 
   await pool.query(
     `UPDATE piratebay_movie_magnets
