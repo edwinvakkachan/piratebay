@@ -57,6 +57,8 @@ for (const row of rows) {
 
 const showName = row.title
   .replace(/S\d+E\d+.*/i, "")
+  .replace(/[._-]/g, " ")
+  .replace(/\s+/g, " ")
   .trim()
   .toLowerCase();
 
@@ -74,9 +76,9 @@ const key = `${showName}-S${match[1]}E${match[2]}`;
 
 const filteredRows = [...episodeMap.values()];
 
-
-
-
+console.log(
+  `Original: ${rows.length}, Filtered: ${filteredRows.length}`
+);
 
     await loginQB();
     console.log("adding torrents from DB");
