@@ -57,6 +57,9 @@ export async function addToTorrent() {
 
 const MIN_MOVIE_YEAR = 2025;
 
+const ONE_GB = 1024 * 1024 * 1024;
+const THREE_GB = 3 * ONE_GB;
+
 const result = await pool.query(`
   SELECT *
   FROM piratebay_movie_magnets
@@ -67,7 +70,7 @@ const result = await pool.query(`
         media_type = 'tv'
         AND (
           size IS NULL
-          OR CAST(size AS BIGINT) < 2147483648
+          OR CAST(size AS BIGINT) < ${ONE_GB}
         )
       )
       OR
@@ -75,7 +78,7 @@ const result = await pool.query(`
         media_type = 'movie'
         AND (
           size IS NULL
-          OR CAST(size AS BIGINT) < 3221225472
+          OR CAST(size AS BIGINT) < ${THREE_GB}
         )
         AND CAST(
           substring(title FROM '(19|20)[0-9]{2}')
