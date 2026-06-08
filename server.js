@@ -13,6 +13,8 @@ import { publishMessage } from "./queue/publishMessage.js";
 import { initDB } from "./db/db.js";
 import { saveMagnets } from "./db/saveMagnets.js";
 import { isQBittorrentAvailable } from "./qbittorrent/qb.js";
+import { yts,updateYtsRunTime,shouldRunYts } from "./yts/yts.js";
+
 
 async function main() {
   try {
@@ -46,14 +48,19 @@ async function main() {
 
     console.log(`Saving ${torrents.length} Pirate Bay movie magnets`);
     await saveMagnets(torrents);
-
+     
     await delay(1000);
+
+ if (await shouldRunYts()) {
+    console.log('Running YTS sync...');
+    await yts();
+    await updateYtsRunTime();
+  }
+
     const result = await isQBittorrentAvailable();
     if(result){
       await addToTorrent();
       await delay(1000);
-      // await deleteLargePirateBayTorrents();
-      // await delay(1000);
       console.log("Process completed: movie magnets are saved in DB and added to qBittorrent");
       await retry(
         triggerHomeAssistantWebhook,
@@ -69,6 +76,8 @@ async function main() {
     await publishMessage({
       message: "Pirate Bay movie scraping completed successfully"
     });
+
+
 
     await log();
   } catch (error) {
