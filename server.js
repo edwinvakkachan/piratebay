@@ -50,12 +50,12 @@ async function main() {
     await saveMagnets(torrents);
      
     await delay(1000);
-    
     if (await shouldRunYts()) {
       console.log('Running YTS sync...');
       
       await yts();
       await eztv();
+      
     await updateYtsRunTime();
   }
 
