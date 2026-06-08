@@ -1,6 +1,24 @@
 import axios from "axios";
 import pool from "../db/pool.js";
 
+async function getLastYtsId() {
+  const result = await pool.query(
+    "SELECT value FROM app_state WHERE key = 'last_yts_id'"
+  );
+
+  return result.rowCount
+    ? parseInt(result.rows[0].value, 10)
+    : 0;
+}
+
+async function setLastYtsId(id) {
+  await pool.query(`
+    INSERT INTO app_state(key, value)
+    VALUES ('last_yts_id', $1)
+    ON CONFLICT (key)
+    DO UPDATE SET value = EXCLUDED.value
+  `, [String(id)]);
+}
 
 function sizeToBytes(sizeStr) {
   const [value, unit] = sizeStr.split(' ');
@@ -20,18 +38,49 @@ function sizeToBytes(sizeStr) {
 }
 
 export async function yts() {
-  let page = 1;
 
-  while (true) {
+  console.log('\n========== YTS SYNC START ==========');
+
+  const lastKnownId = await getLastYtsId();
+
+  console.log(`Last processed YTS ID: ${lastKnownId}`);
+
+  let highestIdSeen = lastKnownId;
+  let page = 1;
+  let stop = false;
+
+  let inserted = 0;
+
+  while (!stop) {
+
+    console.log(`Fetching page ${page}`);
+
     const res = await axios.get(
       `https://yts.bz/api/v2/list_movies.json?page=${page}`
     );
 
     const movies = res.data?.data?.movies || [];
 
-    if (!movies.length) break;
+    if (!movies.length) {
+      console.log('No movies returned');
+      break;
+    }
 
     for (const movie of movies) {
+
+      if (movie.id <= lastKnownId) {
+        console.log(
+          `Reached old movie ID ${movie.id}. Stopping.`
+        );
+
+        stop = true;
+        break;
+      }
+
+      if (movie.id > highestIdSeen) {
+        highestIdSeen = movie.id;
+      }
+
       for (const torrent of movie.torrents) {
 
         const magnet =
@@ -47,8 +96,6 @@ export async function yts() {
         );
 
         if (exists.rowCount > 0) continue;
-
-const sizeBytes = sizeToBytes(torrent.size);
 
         await pool.query(
           `INSERT INTO piratebay_movie_magnets (
@@ -74,20 +121,29 @@ const sizeBytes = sizeToBytes(torrent.size);
             `${movie.title} ${movie.year} ${torrent.quality}`,
             magnet,
             movie.url,
-            sizeBytes.toString(),
+            torrent.size_bytes.toString(),
             torrent.seeds,
             torrent.peers
           ]
         );
+
+        inserted++;
       }
     }
 
-    console.log(
-      `Page ${page}: inserted ${movies.length} movies`
-    );
-
     page++;
   }
+
+  if (highestIdSeen > lastKnownId) {
+    await setLastYtsId(highestIdSeen);
+
+    console.log(
+      `Updated last_yts_id to ${highestIdSeen}`
+    );
+  }
+
+  console.log(`Inserted: ${inserted}`);
+  console.log('========== YTS SYNC COMPLETE ==========\n');
 }
 
 export async function shouldRunYts() {

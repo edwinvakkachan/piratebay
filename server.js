@@ -14,7 +14,7 @@ import { initDB } from "./db/db.js";
 import { saveMagnets } from "./db/saveMagnets.js";
 import { isQBittorrentAvailable } from "./qbittorrent/qb.js";
 import { yts,updateYtsRunTime,shouldRunYts } from "./yts/yts.js";
-
+import { eztv } from "./eztv/eztv.js";
 
 async function main() {
   try {
@@ -50,10 +50,12 @@ async function main() {
     await saveMagnets(torrents);
      
     await delay(1000);
-
- if (await shouldRunYts()) {
-    console.log('Running YTS sync...');
-    await yts();
+    
+    if (await shouldRunYts()) {
+      console.log('Running YTS sync...');
+      
+      await yts();
+      await eztv();
     await updateYtsRunTime();
   }
 
