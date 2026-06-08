@@ -15,7 +15,7 @@ import { saveMagnets } from "./db/saveMagnets.js";
 import { isQBittorrentAvailable } from "./qbittorrent/qb.js";
 import { yts,updateYtsRunTime,shouldRunYts } from "./yts/yts.js";
 import { eztv } from "./eztv/eztv.js";
-
+import { buildTraktCache } from "./traktv/traktv.js";
 async function main() {
   try {
     await log();
@@ -59,19 +59,22 @@ async function main() {
     await updateYtsRunTime();
   }
 
-    const result = await isQBittorrentAvailable();
-    if(result){
-      await addToTorrent();
-      await delay(1000);
-      console.log("Process completed: movie magnets are saved in DB and added to qBittorrent");
-      await retry(
-        triggerHomeAssistantWebhook,
-        { status: "success" },
-        "homeassistant-success",
-        5
-      );
+  await buildTraktCache();
+
+
+    // const result = await isQBittorrentAvailable();
+    // if(result){
+    //   await addToTorrent();
+    //   await delay(1000);
+    //   console.log("Process completed: movie magnets are saved in DB and added to qBittorrent");
+    //   await retry(
+    //     triggerHomeAssistantWebhook,
+    //     { status: "success" },
+    //     "homeassistant-success",
+    //     5
+    //   );
       
-    }
+    // }
 
 
 
