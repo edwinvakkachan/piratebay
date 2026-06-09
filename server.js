@@ -36,9 +36,9 @@ async function main() {
 
     await delay(1000);
 
-    await piratebayTv();
+    // await piratebayTv();
     await delay(1000);
-    await piratebaymovie();
+    // await piratebaymovie();
     await delay(1000);
     await yts();
       await delay(1000);
