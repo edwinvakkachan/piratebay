@@ -16,6 +16,7 @@ import { isQBittorrentAvailable } from "./qbittorrent/qb.js";
 import { yts,updateYtsRunTime,shouldRunYts } from "./yts/yts.js";
 import { eztv } from "./eztv/eztv.js";
 import { buildTraktCache } from "./traktv/traktv.js";
+import { radarrsonarr } from "./radarrSonarr/radarrsonarrsync.js";
 async function main() {
   try {
     await log();
@@ -59,7 +60,9 @@ async function main() {
     await updateYtsRunTime();
   }
 
-  await buildTraktCache();
+  // await buildTraktCache();
+ 
+await radarrsonarr();
 
 
     // const result = await isQBittorrentAvailable();
