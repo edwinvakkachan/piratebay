@@ -19,6 +19,7 @@ import { buildTraktCache } from "./traktv/traktv.js";
 import { radarrsonarr } from "./radarrSonarr/radarrsonarrsync.js";
 import { sendMissingRadarrSonarrToQbit } from "./addingtorrents/radarrSonarrToQbit.js";
 import { privatebay } from "./piratebay/piratebay.js";
+import { sendToArr } from "./addToArr.js";
 
 async function main() {
   try {
@@ -49,7 +50,8 @@ async function main() {
   await buildTraktCache();
  
 await radarrsonarr();
-// await sendMissingRadarrSonarrToQbit();
+await sendToArr();
+await sendMissingRadarrSonarrToQbit();
 
 
     // const result = await isQBittorrentAvailable();
