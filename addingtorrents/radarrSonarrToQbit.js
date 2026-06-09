@@ -25,7 +25,7 @@ export async function sendMissingRadarrSonarrToQbit() {
     AND EXISTS (
       SELECT 1
       FROM unnest(tag_names) AS tag
-      WHERE LOWER(tag) = 'trackenglish'
+      WHERE LOWER(tag) = 'sitescrapemovies'
     )
   ORDER BY title
 `);
