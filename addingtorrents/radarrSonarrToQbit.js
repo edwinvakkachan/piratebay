@@ -16,14 +16,19 @@ export async function sendMissingRadarrSonarrToQbit() {
   try {
 
 
-    const wantedResult = await pool.query(`
-      SELECT *
-      FROM radarrsonarr
-      WHERE removed = FALSE
-        AND source = 'radarr'
-        AND COALESCE(size_on_disk,0) = 0
-      ORDER BY title
-    `);
+  const wantedResult = await pool.query(`
+  SELECT *
+  FROM radarrsonarr
+  WHERE removed = FALSE
+    AND source = 'radarr'
+    AND COALESCE(size_on_disk,0) = 0
+    AND EXISTS (
+      SELECT 1
+      FROM unnest(tag_names) AS tag
+      WHERE LOWER(tag) = 'trackenglish'
+    )
+  ORDER BY title
+`);
 
     console.log(
       `📚 Found ${wantedResult.rows.length} missing movies/shows`
