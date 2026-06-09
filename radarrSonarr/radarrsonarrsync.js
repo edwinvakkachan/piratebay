@@ -34,6 +34,12 @@ export async function radarrsonarr(){
     try {
         
      console.log("🚀 Radarr/Sonarr sync started");
+
+     await pool.query(`
+  UPDATE radarrSonarr
+  SET removed = TRUE
+`);
+
     const movies = await getRadarrMovies();
      console.log(
       `🎬 Found ${movies.length} Radarr movies`

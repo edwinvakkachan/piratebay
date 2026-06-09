@@ -74,7 +74,6 @@ export async function moveTorrentToTop() {
 
 export async function isQBittorrentAvailable() {
   try {
-    await loginQB();
 
     const { data } = await qb.get("/api/v2/app/version");
 
@@ -90,3 +89,17 @@ export async function isQBittorrentAvailable() {
     return false;
   }
 }
+
+export async function radarrSonnarToTorrent(magnet){
+const today = new Date().toISOString().split("T")[0];
+
+const params = new URLSearchParams({
+    urls: magnet,
+    category:'2tbEnglish',
+    tags: [...MOVIE_TAGS,`piratebay.${today}`,'Fromtraklist'].join(",")
+  });
+
+await qb.post("/api/v2/torrents/add", params);
+
+}
+

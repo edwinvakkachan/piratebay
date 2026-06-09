@@ -17,6 +17,7 @@ import { yts,updateYtsRunTime,shouldRunYts } from "./yts/yts.js";
 import { eztv } from "./eztv/eztv.js";
 import { buildTraktCache } from "./traktv/traktv.js";
 import { radarrsonarr } from "./radarrSonarr/radarrsonarrsync.js";
+import { sendMissingRadarrSonarrToQbit } from "./addingtorrents/radarrSonarrToQbit.js";
 async function main() {
   try {
     await log();
@@ -31,24 +32,6 @@ async function main() {
 
     await delay(1000);
 
-    const torrents = await scrapePirateBayMovieMagnets();
-
-    if (!torrents || torrents.length === 0) {
-      console.log("No Pirate Bay movie magnets found.");
-      await publishMessage({
-        message: "No Pirate Bay movie magnets found."
-      });
-      await retry(
-        triggerHomeAssistantWebhookWhenErrorOccurs,
-        { status: "error" },
-        "homeassistant-error",
-        5
-      );
-      return;
-    }
-
-    console.log(`Saving ${torrents.length} Pirate Bay movie magnets`);
-    await saveMagnets(torrents);
      
     await delay(1000);
     if (await shouldRunYts()) {
@@ -62,7 +45,8 @@ async function main() {
 
   // await buildTraktCache();
  
-await radarrsonarr();
+// await radarrsonarr();
+await sendMissingRadarrSonarrToQbit();
 
 
     // const result = await isQBittorrentAvailable();
