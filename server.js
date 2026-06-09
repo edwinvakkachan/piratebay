@@ -34,21 +34,22 @@ async function main() {
 
     await delay(1000);
 
-  //    await privatebay();
-  //   await delay(1000);
+     await privatebay();
+    await delay(1000);
+    await yts();
+      await delay(1000);
+    await eztv();
   //   if (await shouldRunYts()) {
   //     console.log('Running YTS sync...');
       
-  //     await yts();
-  //     await eztv();
       
   //   await updateYtsRunTime();
   // }
 
-  // await buildTraktCache();
+  await buildTraktCache();
  
 await radarrsonarr();
-await sendMissingRadarrSonarrToQbit();
+// await sendMissingRadarrSonarrToQbit();
 
 
     // const result = await isQBittorrentAvailable();
