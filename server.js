@@ -35,7 +35,7 @@ async function main() {
 
     await delay(1000);
 
-     await privatebay();
+    //  await privatebay();
     await delay(1000);
     await yts();
       await delay(1000);
@@ -47,11 +47,11 @@ async function main() {
   //   await updateYtsRunTime();
   // }
 
-  await buildTraktCache();
+//   await buildTraktCache();
  
-await radarrsonarr();
-await sendToArr();
-await sendMissingRadarrSonarrToQbit();
+// await radarrsonarr();
+// await sendToArr();
+// await sendMissingRadarrSonarrToQbit();
 
 
     // const result = await isQBittorrentAvailable();

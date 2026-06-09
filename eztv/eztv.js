@@ -87,35 +87,52 @@ export async function eztv() {
         continue;
       }
 
-      await pool.query(`
-        INSERT INTO piratebay_movie_magnets (
-          title,
-          magnet,
-          source_url,
-          size,
-          seeders,
-          leechers,
-          created_at,
-          sent_to_qbittorrent,
-          media_type,
-          skipped_duplicate
-        )
-        VALUES (
-          $1,$2,$3,$4,$5,$6,
-          TO_TIMESTAMP($7),
-          FALSE,
-          'tv',
-          FALSE
-        )
-      `, [
-        torrent.title,
-        torrent.magnet_url,
-        `https://eztvx.to/torrent/${torrent.id}`,
-        torrent.size_bytes.toString(),
-        torrent.seeds,
-        torrent.peers,
-        torrent.date_released_unix
-      ]);
+await pool.query(`
+  INSERT INTO piratebay_movie_magnets (
+    title,
+    clean_title,
+    year,
+    imdb_id,
+    tmdb_id,
+    tvdb_id,
+    trakt_id,
+    metadata_status,
+    metadata_updated_at,
+    magnet,
+    source_url,
+    size,
+    seeders,
+    leechers,
+    created_at,
+    sent_to_qbittorrent,
+    media_type,
+    skipped_duplicate
+  )
+  VALUES (
+    $1,$2,$3,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    'pending',
+    NOW(),
+    $4,$5,$6,$7,$8,
+    TO_TIMESTAMP($9),
+    FALSE,
+    'show',
+    FALSE
+  )
+`, [
+  torrent.title,       // original title
+  torrent.title,       // temporary clean_title
+  null,                // year extracted later
+  torrent.magnet_url,
+  `https://eztvx.to/torrent/${torrent.id}`,
+  torrent.size_bytes.toString(),
+  torrent.seeds,
+  torrent.peers,
+  torrent.date_released_unix
+]);
 
       inserted++;
 

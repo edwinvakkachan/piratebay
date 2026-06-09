@@ -97,35 +97,41 @@ export async function yts() {
 
         if (exists.rowCount > 0) continue;
 
-        await pool.query(
-          `INSERT INTO piratebay_movie_magnets (
-            title,
-            magnet,
-            source_url,
-            size,
-            seeders,
-            leechers,
-            created_at,
-            sent_to_qbittorrent,
-            media_type,
-            skipped_duplicate
-          )
-          VALUES (
-            $1,$2,$3,$4,$5,$6,
-            NOW(),
-            FALSE,
-            'movie',
-            FALSE
-          )`,
-          [
-            `${movie.title} ${movie.year} ${torrent.quality}`,
-            magnet,
-            movie.url,
-            torrent.size_bytes.toString(),
-            torrent.seeds,
-            torrent.peers
-          ]
-        );
+       await pool.query(
+  `INSERT INTO piratebay_movie_magnets (
+      title,
+      clean_title,
+      year,
+      imdb_id,
+      magnet,
+      source_url,
+      size,
+      seeders,
+      leechers,
+      created_at,
+      sent_to_qbittorrent,
+      media_type,
+      skipped_duplicate
+   )
+   VALUES (
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,
+      NOW(),
+      FALSE,
+      'movie',
+      FALSE
+   )`,
+  [
+    `${movie.title} ${movie.year} ${torrent.quality}`,
+    movie.title,
+    movie.year,
+    movie.imdb_code,
+    magnet,
+    movie.url,
+    torrent.size_bytes.toString(),
+    torrent.seeds,
+    torrent.peers
+  ]
+);
 
         inserted++;
       }
