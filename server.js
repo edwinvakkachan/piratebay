@@ -18,6 +18,8 @@ import { eztv } from "./eztv/eztv.js";
 import { buildTraktCache } from "./traktv/traktv.js";
 import { radarrsonarr } from "./radarrSonarr/radarrsonarrsync.js";
 import { sendMissingRadarrSonarrToQbit } from "./addingtorrents/radarrSonarrToQbit.js";
+import { privatebay } from "./piratebay/piratebay.js";
+
 async function main() {
   try {
     await log();
@@ -32,20 +34,20 @@ async function main() {
 
     await delay(1000);
 
-     
-    await delay(1000);
-    if (await shouldRunYts()) {
-      console.log('Running YTS sync...');
+  //    await privatebay();
+  //   await delay(1000);
+  //   if (await shouldRunYts()) {
+  //     console.log('Running YTS sync...');
       
-      await yts();
-      await eztv();
+  //     await yts();
+  //     await eztv();
       
-    await updateYtsRunTime();
-  }
+  //   await updateYtsRunTime();
+  // }
 
   // await buildTraktCache();
  
-// await radarrsonarr();
+await radarrsonarr();
 await sendMissingRadarrSonarrToQbit();
 
 

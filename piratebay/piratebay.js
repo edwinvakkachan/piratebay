@@ -1,7 +1,11 @@
+import { scrapePirateBayMovieMagnets } from "../extractHomePage.js";
+import { saveMagnets } from "../db/saveMagnets.js";
+import { retry } from "../homeassistant/retryWrapper.js";
+import { triggerHomeAssistantWebhookWhenErrorOccurs } from "../homeassistant/homeAssistantWebhook.js";
 
 
-export async function piratebay(){
-    
+export async function privatebay(){
+    console.log('privatebay torrents scraping started');
         const torrents = await scrapePirateBayMovieMagnets();
     
         if (!torrents || torrents.length === 0) {
