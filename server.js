@@ -20,6 +20,8 @@ import { radarrsonarr } from "./radarrSonarr/radarrsonarrsync.js";
 import { sendMissingRadarrSonarrToQbit } from "./addingtorrents/radarrSonarrToQbit.js";
 import { privatebay } from "./piratebay/piratebay.js";
 import { sendToArr } from "./addToArr.js";
+import { piratebayTv,piratebaymovie } from "./piratebay/piratebay.js";
+
 
 async function main() {
   try {
@@ -35,7 +37,9 @@ async function main() {
 
     await delay(1000);
 
-    //  await privatebay();
+    await piratebayTv();
+    await delay(1000);
+    await piratebaymovie();
     await delay(1000);
     await yts();
       await delay(1000);
