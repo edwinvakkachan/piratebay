@@ -66,7 +66,7 @@ async function main() {
   const result = await isQBittorrentAvailable();
   if(result){
   await sendMissingRadarrToQbit();
-  await sendMissingSonarrToQbit();
+  // await sendMissingSonarrToQbit();
     }
 
 

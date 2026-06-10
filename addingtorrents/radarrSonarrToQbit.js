@@ -10,7 +10,7 @@ import { radarrToTorrent,SonnarToTorrent } from "../qbittorrent/qb.js";
 
 export async function sendMissingRadarrToQbit() {
   console.log("========================================");
-  console.log("🚀 Radarr/Sonarr → qBittorrent Started");
+  console.log("🚀 Radarr → qBittorrent Started");
   console.log("========================================");
 
   try {
@@ -82,13 +82,20 @@ LIMIT 1
       );
 
       try {
-        await radarrToTorrent(torrent.magnet)
-
+        await radarrToTorrent(torrent.magnet);
         await pool.query(`
           UPDATE piratebay_movie_magnets
           SET sent_to_qbittorrent = TRUE
           WHERE id = $1
         `, [torrent.id]);
+
+await pool.query(`
+  UPDATE piratebay_movie_magnets
+  SET skipped_duplicate = TRUE
+  WHERE imdb_id = $1
+    AND id <> $2
+    AND sent_to_qbittorrent = FALSE
+`, [torrent.imdb_id, torrent.id]);
 
         console.log("📥 Sent to qBittorrent");
 
