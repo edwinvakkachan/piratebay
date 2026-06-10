@@ -21,30 +21,32 @@ export async function piratebaymovie() {
     await pool.query(`
       INSERT INTO piratebay_movie_magnets (
         title,
-        clean_title,
         magnet,
         source_url,
         size,
         seeders,
         leechers,
-        media_type,
-        metadata_status
+        imdb_id,
+        metadata_status,
+        sent_to_qbittorrent,
+        skipped_duplicate
       )
       VALUES (
         $1,$2,$3,$4,$5,$6,$7,
-        NULL,
-        'pending'
+        'pending',
+        FALSE,
+        FALSE
       )
       ON CONFLICT (magnet)
       DO NOTHING
     `, [
       torrent.name,
-      torrent.name,
       magnet,
       `https://thepiratebay.org/description.php?id=${torrent.id}`,
       torrent.size,
       torrent.seeders,
-      torrent.leechers
+      torrent.leechers,
+      torrent.imdb,
     ]);
   }
 }
@@ -75,20 +77,18 @@ export async function piratebayTv() {
     await pool.query(`
       INSERT INTO piratebay_movie_magnets (
         title,
-        clean_title,
         magnet,
         source_url,
         size,
         seeders,
         leechers,
-        media_type,
+        imdb_id,
         metadata_status,
         sent_to_qbittorrent,
         skipped_duplicate
       )
       VALUES (
         $1,$2,$3,$4,$5,$6,$7,
-        'tv',
         'pending',
         FALSE,
         FALSE
@@ -97,12 +97,12 @@ export async function piratebayTv() {
       DO NOTHING
     `, [
       torrent.name,
-      torrent.name,
       magnet,
       `https://thepiratebay.org/description.php?id=${torrent.id}`,
       torrent.size,
       Number(torrent.seeders || 0),
-      Number(torrent.leechers || 0)
+      Number(torrent.leechers || 0),
+      torrent.imdb
     ]);
 
     inserted++;

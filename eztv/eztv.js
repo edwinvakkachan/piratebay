@@ -55,83 +55,66 @@ export async function eztv() {
       break;
     }
 
-    for (const torrent of torrents) {
+    for (const show of torrents) {
 
-      if (torrent.id <= lastKnownId) {
+      if (show.id <= lastKnownId) {
         console.log(
-          `Reached old torrent ID ${torrent.id}. Stopping scan.`
+          `Reached old torrent ID ${show.id}. Stopping scan.`
         );
         stop = true;
         break;
       }
 
-      if (torrent.id > highestIdSeen) {
-        highestIdSeen = torrent.id;
+      if (show.id > highestIdSeen) {
+        highestIdSeen = show.id;
       }
 
-      const exists = await pool.query(
-        `SELECT 1
-         FROM piratebay_movie_magnets
-         WHERE magnet = $1
-         LIMIT 1`,
-        [torrent.magnet_url]
-      );
 
-      if (exists.rowCount > 0) {
-        duplicates++;
-
-        console.log(
-          `Duplicate skipped: ${torrent.title}`
+        const exists = await pool.query(
+          `SELECT 1
+           FROM piratebay_movie_magnets
+           WHERE magnet = $1
+           LIMIT 1`,
+          [show.magnet_url]
         );
 
-        continue;
-      }
+        if (exists.rowCount > 0) continue;
+
+
 
 await pool.query(`
   INSERT INTO piratebay_movie_magnets (
-  title,
-  magnet,
-  source_url,
-  size,
-  seeders,
-  leechers,
-  created_at,
-  sent_to_qbittorrent,
-  media_type,
-  imdb_id,
-  skipped_duplicate
-)
+    title,
+    magnet,
+    source_url,
+    size,
+    seeders,
+    leechers,
+    imdb_id,
+    created_at,
+    sent_to_qbittorrent,
+    skipped_duplicate
+  )
   VALUES (
-    $1,$2,$3,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    'pending',
+    $1,$2,$3,$4,$5,$6,$7,
     NOW(),
-    $4,$5,$6,$7,$8,
-    TO_TIMESTAMP($9),
     FALSE,
-    'show',
     FALSE
   )
 `, [
-  torrent.title,
-  torrent.magnet_url,
-  `https://eztvx.to/torrent/${torrent.id}`,
-  torrent.size_bytes.toString(),
-  torrent.seeds,
-  torrent.peers,
-  torrent.date_released_unix,
-  torrent.imdb_id && torrent.imdb_id !== "0"
-    ? `tt${torrent.imdb_id}`
-    : null
+  show.title,
+  show.magnet_url,
+  `https://eztvx.to/torrent/${show.id}`,
+  show.size_bytes.toString(),
+  show.seeds,
+  show.peers,
+  show.imdb_id
 ]);
 
       inserted++;
 
       console.log(
-        `Inserted ID ${torrent.id} | ${torrent.title}`
+        `Inserted ID ${show.id} | ${show.title}`
       );
     }
 

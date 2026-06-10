@@ -35,13 +35,12 @@ async function main() {
     console.log("db is ready");
 
     await delay(1000);
-
-    // await piratebayTv();
+    await piratebayTv();
     await delay(1000);
-    // await piratebaymovie();
+    await piratebaymovie();
     await delay(1000);
     await yts();
-      await delay(1000);
+    await delay(1000);
     await eztv();
   //   if (await shouldRunYts()) {
   //     console.log('Running YTS sync...');
