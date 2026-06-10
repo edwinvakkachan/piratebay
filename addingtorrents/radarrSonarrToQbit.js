@@ -1,7 +1,7 @@
 import pool from "../db/pool.js";
 import axios from "axios";
 import { radarrToTorrent,SonnarToTorrent } from "../qbittorrent/qb.js";
-
+import { extractEpisodeAndSeasonDetails } from "./extractEpisodeAndSeasonDetails.js.js";
 
 
 
@@ -149,19 +149,24 @@ export async function sendMissingSonarrToQbit(){
       console.log(
         `🔍 Searching: ${item.title} (${item.source})`
       );
-
+await extractEpisodeAndSeasonDetails(item.imdb_id)
 
 const torrentResult = await pool.query(`
-  SELECT *
-  FROM piratebay_movie_magnets
-  WHERE imdb_id = $1
-    AND CAST(size AS BIGINT) < 1073741824
-    AND sent_to_qbittorrent = FALSE
-    AND COALESCE(skipped_duplicate,FALSE) = FALSE
-  ORDER BY seeders DESC
-  LIMIT 1
+SELECT *
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY imdb_id, season, episode
+               ORDER BY seeders DESC
+           ) AS rn
+    FROM piratebay_movie_magnets
+    WHERE imdb_id = $1
+      AND sent_to_qbittorrent = FALSE
+      AND COALESCE(skipped_duplicate,FALSE) = FALSE
+) t
+WHERE rn = 1
+ORDER BY season, episode
 `, [item.imdb_id]);
-
 
   if (torrentResult.rows.length === 0) {
         console.log(item.imdb_id)
@@ -170,13 +175,18 @@ const torrentResult = await pool.query(`
         continue;
       }
 
-      const torrent = torrentResult.rows[0];
+      // const torrent = torrentResult.rows[0];
 
-      console.log(
+     
+for (const torrent of torrentResult.rows){
+
+  try {
+
+     console.log(
         `✅ Match Found`
       );
       console.log(
-        `   Torrent : ${torrent.title}`
+        `   Torrent : ${torrent.title}, ${torrent.season} ${torrent.episode}`
       );
       console.log(
         `   Seeders : ${torrent.seeders}`
@@ -190,24 +200,36 @@ const torrentResult = await pool.query(`
         ).toFixed(2)} GB`
       );
 
-      try {
-        await SonnarToTorrent(torrent.magnet)
 
-        await pool.query(`
-          UPDATE piratebay_movie_magnets
-          SET sent_to_qbittorrent = TRUE
-          WHERE id = $1
-        `, [torrent.id]);
+    await SonnarToTorrent(torrent.magnet)
 
-        console.log("📥 Sent to qBittorrent");
+    await pool.query(`UPDATE piratebay_movie_magnets
+SET skipped_duplicate = TRUE
+WHERE imdb_id = $1
+  AND season = $2
+  AND episode = $3
+  AND id <> $4
+    `, [torrent.imdb_id,torrent.season,torrent.episode,torrent.id]);
 
-        added++;
-      } catch (err) {
-        console.error(
-          `❌ qBittorrent Error:`,
-          err.message
-        );
-      }
+
+await pool.query(`
+  UPDATE piratebay_movie_magnets
+SET sent_to_qbittorrent = TRUE
+WHERE id = $1
+  `,[
+    torrent.id
+  ])
+
+    console.log("📥 Sent to qBittorrent");
+
+    added++;
+  } catch (err) {
+    console.error(
+      `❌ qBittorrent Error:`,
+      err.message
+    );
+  }
+}
 
     }
 
