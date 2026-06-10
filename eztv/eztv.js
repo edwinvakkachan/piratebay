@@ -108,7 +108,7 @@ await pool.query(`
   show.size_bytes.toString(),
   show.seeds,
   show.peers,
-  show.imdb_id
+  show.imdb_id ? `tt${show.imdb_id}` : null
 ]);
 
       inserted++;

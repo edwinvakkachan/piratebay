@@ -20,7 +20,7 @@ import { radarrsonarr } from "./radarrSonarr/radarrsonarrsync.js";
 import { sendMissingRadarrSonarrToQbit } from "./addingtorrents/radarrSonarrToQbit.js";
 import { sendToArr } from "./addToArr.js";
 import { piratebayTv,piratebaymovie } from "./piratebay/piratebay.js";
-
+import { populateMetadataFromOMDb } from "./omdb/populateMetadataFromOMDb.js";
 
 async function main() {
   try {
@@ -50,6 +50,7 @@ async function main() {
   // }
 
   await buildTraktCache();
+  await populateMetadataFromOMDb();
  
 // await radarrsonarr();
 // await sendToArr();
