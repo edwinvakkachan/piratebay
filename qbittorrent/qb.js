@@ -90,13 +90,25 @@ export async function isQBittorrentAvailable() {
   }
 }
 
-export async function radarrSonnarToTorrent(magnet){
+export async function radarrToTorrent(magnet){
 const today = new Date().toISOString().split("T")[0];
 
 const params = new URLSearchParams({
     urls: magnet,
     category:'2tbEnglish',
     tags: [...MOVIE_TAGS,`piratebay.${today}`,'Fromtraklist'].join(",")
+  });
+
+await qb.post("/api/v2/torrents/add", params);
+
+}
+export async function SonnarToTorrent(magnet){
+const today = new Date().toISOString().split("T")[0];
+
+const params = new URLSearchParams({
+    urls: magnet,
+    category:'qbit4tbTV',
+    tags: [...MOVIE_TAGS,`piratebay.${today}`,'Fromtraklist','tvtorrents'].join(",")
   });
 
 await qb.post("/api/v2/torrents/add", params);

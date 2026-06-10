@@ -17,10 +17,11 @@ import { yts,updateYtsRunTime,shouldRunYts } from "./yts/yts.js";
 import { eztv } from "./eztv/eztv.js";
 import { buildTraktCache } from "./traktv/traktv.js";
 import { radarrsonarr } from "./radarrSonarr/radarrsonarrsync.js";
-import { sendMissingRadarrSonarrToQbit } from "./addingtorrents/radarrSonarrToQbit.js";
+import { sendMissingRadarrToQbit,sendMissingSonarrToQbit } from "./addingtorrents/radarrSonarrToQbit.js";
 import { sendToArr } from "./addToArr.js";
 import { piratebayTv,piratebaymovie } from "./piratebay/piratebay.js";
 import { populateMetadataFromOMDb } from "./omdb/populateMetadataFromOMDb.js";
+import { checkRadarr, checkSonarr } from "./radarrSonarravailabilitycheck.js";
 
 async function main() {
   try {
@@ -51,25 +52,22 @@ async function main() {
 
   await buildTraktCache();
   await populateMetadataFromOMDb();
- 
-await radarrsonarr();
-await sendToArr();
-await sendMissingRadarrSonarrToQbit();
+   
+  const isRadarrAvailable = await checkRadarr();
+  const isSonarrAvailable = await checkSonarr();
 
+  if(isRadarrAvailable && isSonarrAvailable) {
+    await radarrsonarr();
+    await sendToArr();
 
-    // const result = await isQBittorrentAvailable();
-    // if(result){
-    //   await addToTorrent();
-    //   await delay(1000);
-    //   console.log("Process completed: movie magnets are saved in DB and added to qBittorrent");
-    //   await retry(
-    //     triggerHomeAssistantWebhook,
-    //     { status: "success" },
-    //     "homeassistant-success",
-    //     5
-    //   );
-      
-    // }
+  }
+  
+  
+  const result = await isQBittorrentAvailable();
+  if(result){
+  await sendMissingRadarrToQbit();
+  await sendMissingSonarrToQbit();
+    }
 
 
 
