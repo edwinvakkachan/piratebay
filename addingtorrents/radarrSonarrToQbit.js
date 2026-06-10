@@ -47,7 +47,7 @@ const torrentResult = await pool.query(`
 SELECT *
 FROM piratebay_movie_magnets
 WHERE imdb_id = $1
-  AND CAST(size AS BIGINT) < 3221225472
+  AND CAST(size AS BIGINT) < 1610612736
   AND sent_to_qbittorrent = FALSE
   AND COALESCE(skipped_duplicate,FALSE) = FALSE
 ORDER BY seeders DESC
