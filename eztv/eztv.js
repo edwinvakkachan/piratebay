@@ -21,6 +21,8 @@ async function setLastEztvId(id) {
 }
 
 export async function eztv() {
+  try {
+    
 
   console.log('\n========== EZTV SYNC START ==========');
 
@@ -135,4 +137,7 @@ await pool.query(`
   console.log(`Duplicates: ${duplicates}`);
   console.log(`Highest ID Seen: ${highestIdSeen}`);
   console.log('========================================\n');
+  } catch (error) {
+    console.log(error);
+  }
 }

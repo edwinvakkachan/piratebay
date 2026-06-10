@@ -42,19 +42,19 @@ async function main() {
     await yts();
     await delay(1000);
     await eztv();
-  //   if (await shouldRunYts()) {
-  //     console.log('Running YTS sync...');
+  // // //   if (await shouldRunYts()) {
+  // // //     console.log('Running YTS sync...');
       
       
-  //   await updateYtsRunTime();
-  // }
+  // // //   await updateYtsRunTime();
+  // // // }
 
   await buildTraktCache();
   await populateMetadataFromOMDb();
  
-// await radarrsonarr();
-// await sendToArr();
-// await sendMissingRadarrSonarrToQbit();
+await radarrsonarr();
+await sendToArr();
+await sendMissingRadarrSonarrToQbit();
 
 
     // const result = await isQBittorrentAvailable();

@@ -166,6 +166,8 @@ async function getSonarrQualityProfile() {
 }
 
 export async function sendToArr() {
+  try {
+    
 
   console.log("==================================");
   console.log("🚀 Arr Import Started");
@@ -184,7 +186,7 @@ export async function sendToArr() {
     SELECT *
     FROM trakt_cache
     WHERE trakt_type = 'movie'
-      AND tmdb_id IS NOT NULL
+      AND imdb_id IS NOT NULL
       AND year >= EXTRACT(YEAR FROM CURRENT_DATE) - 1
       AND COALESCE(trakt_status,'pending') <> 'added'
     ORDER BY id
@@ -199,28 +201,35 @@ export async function sendToArr() {
     try {
 
       console.log(
-        `🎬 Adding Movie: ${movie.search_title}`
+        `🎬 Adding Movie: ${movie.clean_title}`
       );
+const lookup = await axios.get(
+  `${RADARR_URL}/api/v3/movie/lookup/imdb?imdbId=${movie.imdb_id}`,
+  {
+    headers: {
+      "X-Api-Key": RADARR_API_KEY
+    }
+  }
+);
 
-      await axios.post(
-        `${RADARR_URL}/api/v3/movie`,
-        {
-          tmdbId: movie.tmdb_id,
-          title: movie.search_title,
-          qualityProfileId: movieProfile,
-          rootFolderPath: movieRoot,
-          monitored: false,
-          tags: movieTagIds,
-          addOptions: {
-            searchForMovie: true
-          }
-        },
-        {
-          headers: {
-            "X-Api-Key": RADARR_API_KEY
-          }
-        }
-      );
+const tmdbId = lookup.data.tmdbId;
+
+
+await axios.post(
+  `${RADARR_URL}/api/v3/movie`,
+  {
+    tmdbId,
+    qualityProfileId: movieProfile,
+    rootFolderPath: movieRoot,
+    monitored: false,
+    tags: movieTagIds
+  },
+  {
+    headers: {
+      "X-Api-Key": RADARR_API_KEY
+    }
+  }
+);
 
       await pool.query(`
         UPDATE trakt_cache
@@ -229,13 +238,13 @@ export async function sendToArr() {
       `,[movie.id]);
 
       console.log(
-        `✅ Added Movie: ${movie.search_title}`
+        `✅ Added Movie: ${movie.clean_title}`
       );
 
     } catch (err) {
 
       console.log(
-        `❌ Movie Failed: ${movie.search_title}`
+        `❌ Movie Failed: ${movie.clean_title}`
       );
 
       console.log(
@@ -247,8 +256,8 @@ export async function sendToArr() {
   const showResult = await pool.query(`
     SELECT *
     FROM trakt_cache
-    WHERE trakt_type = 'show'
-      AND tvdb_id IS NOT NULL
+    WHERE trakt_type = 'tv'
+      AND imdb_id IS NOT NULL
       AND COALESCE(trakt_status,'pending') <> 'added'
     ORDER BY id
   `);
@@ -262,31 +271,46 @@ export async function sendToArr() {
     try {
 
       console.log(
-        `📺 Adding Show: ${show.search_title}`
+        `📺 Adding Show: ${show.clean_title}`
       );
 
-      await axios.post(
-        `${SONARR_URL}/api/v3/series`,
-        {
-          tvdbId: show.tvdb_id,
-          title: show.search_title,
-          qualityProfileId: showProfile,
-          rootFolderPath: "/data/4tb/media/TV-English",
-          monitored: false,
-           monitorNewItems: "none",
-            seasonFolder: true,
-          tags: showTagIds,
-           addOptions: {
+const lookup = await axios.get(
+  `${SONARR_URL}/api/v3/series/lookup?term=imdb:${show.imdb_id}`,
+  {
+    headers: {
+      "X-Api-Key": SONARR_API_KEY
+    }
+  }
+);
+
+if (!lookup.data.length) {
+  throw new Error(`Series not found for ${show.imdb_id}`);
+}
+
+const series = lookup.data[0];
+
+await axios.post(
+  `${SONARR_URL}/api/v3/series`,
+  {
+    tvdbId: series.tvdbId,
+    title: series.title,
+    qualityProfileId: showProfile,
+    rootFolderPath: "/data/4tb/media/TV-English",
+    monitored: false,
+    monitorNewItems: "none",
+    seasonFolder: true,
+    tags: showTagIds,
+    addOptions: {
       searchForMissingEpisodes: false,
       monitor: "none"
     }
-        },
-        {
-          headers: {
-            "X-Api-Key": SONARR_API_KEY
-          }
-        }
-      );
+  },
+  {
+    headers: {
+      "X-Api-Key": SONARR_API_KEY
+    }
+  }
+);
 
       await pool.query(`
         UPDATE trakt_cache
@@ -295,13 +319,13 @@ export async function sendToArr() {
       `,[show.id]);
 
       console.log(
-        `✅ Added Show: ${show.search_title}`
+        `✅ Added Show: ${show.clean_title}`
       );
 
     } catch (err) {
 
       console.log(
-        `❌ Show Failed: ${show.search_title}`
+        `❌ Show Failed: ${show.clean_title}`
       );
 
       console.log(
@@ -313,4 +337,8 @@ export async function sendToArr() {
   console.log("==================================");
   console.log("🏁 Arr Import Completed");
   console.log("==================================");
+
+  } catch (error) {
+    console.log(error)
+  }
 }
