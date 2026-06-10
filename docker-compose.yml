@@ -17,6 +17,7 @@ services:
       SONARR_URL: ${SONARR_URL}
       SONARR_API_KEY: ${SONARR_API_KEY}
       HA_WEBHOOKERROR_URL: ${HA_WEBHOOKERROR_URL}
+      OMDB_API_KEY: ${OMDB_API_KEY}
     dns:
       - 1.1.1.1
       - 1.0.0.1
