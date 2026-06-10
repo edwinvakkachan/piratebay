@@ -161,6 +161,7 @@ FROM (
            ) AS rn
     FROM piratebay_movie_magnets
     WHERE imdb_id = $1
+      AND CAST(size AS BIGINT) < 1073741824
       AND sent_to_qbittorrent = FALSE
       AND COALESCE(skipped_duplicate,FALSE) = FALSE
 ) t
@@ -175,7 +176,6 @@ ORDER BY season, episode
         continue;
       }
 
-      // const torrent = torrentResult.rows[0];
 
      
 for (const torrent of torrentResult.rows){
