@@ -61,147 +61,59 @@ export async function buildTraktCache() {
   console.log("========== BUILDING TRAKT CACHE ==========");
 
   const torrents = await pool.query(`
-    SELECT
-      id,
-      title,
-      media_type
-    FROM piratebay_movie_magnets
-    ORDER BY id
+   SELECT
+  DISTINCT imdb_id,
+  MIN(title) AS title
+FROM piratebay_movie_magnets
+WHERE imdb_id IS NOT NULL
+GROUP BY imdb_id
+ORDER BY imdb_id
   `);
 
   console.log(`Found ${torrents.rowCount} torrents`);
 
-  let cacheCreated = 0;
-  let mappingsCreated = 0;
+let cacheCreated = 0;
 
-  for (const torrent of torrents.rows) {
+ for (const torrent of torrents.rows) {
 
-const skipPatterns = [
-  /\bpack\b/i,
-  /\bboxset\b/i,
-  /\bcollection\b/i,
-  /\bbest pictures\b/i,
-  /\b\d+\s+movies\b/i
-];
+  let existingCache = { rowCount: 0 };
 
-if (skipPatterns.some(r => r.test(torrent.title))) {
-  continue;
-}
-
-
-
-    const {
-  searchTitle,
-  year,
-  originalTitle
-} = parseTitle(torrent.title);
-
-    if (!searchTitle) continue;
-
-    let cacheId;
-
-const existingCache = await pool.query(
-  `
-  SELECT id
-  FROM trakt_cache
-  WHERE LOWER(search_title) = LOWER($1)
-    AND COALESCE(year,0) = COALESCE($2,0)
-  LIMIT 1
-  `,
-  [searchTitle, year]
-);
-
-    if (existingCache.rowCount > 0) {
-
-      cacheId = existingCache.rows[0].id;
-
-    } else {
-
-
-
-const traktType = detectMediaType(
-  torrent.title,
-  torrent.media_type
-);
-
-const listName =
-  traktType === "show"
-    ? "showsEnglish"
-    : "Movie English";
-
-
-
-
-
-const insertedCache = await pool.query(
-  `
-  INSERT INTO trakt_cache (
-    search_title,
-    original_title,
-    year,
-    trakt_type,
-    list_name
-  )
-  VALUES (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5
-  )
-  RETURNING id
-  `,
-  [
-    searchTitle,
-    originalTitle,
-    year,
-    traktType,
-    listName
-  ]
-);
-
-      cacheId = insertedCache.rows[0].id;
-      cacheCreated++;
-
-      console.log(
-        `[CACHE] ${searchTitle} -> cache_id=${cacheId}`
-      );
-    }
-
-    const mappingExists = await pool.query(
-      `
-      SELECT 1
-      FROM torrent_trakt_match
-      WHERE torrent_id = $1
+  if (torrent.imdb_id) {
+    existingCache = await pool.query(`
+      SELECT id
+      FROM trakt_cache
+      WHERE imdb_id = $1
       LIMIT 1
-      `,
-      [torrent.id]
-    );
-
-    if (mappingExists.rowCount === 0) {
-
-      await pool.query(
-        `
-        INSERT INTO torrent_trakt_match (
-          torrent_id,
-          cache_id
-        )
-        VALUES (
-          $1,
-          $2
-        )
-        `,
-        [
-          torrent.id,
-          cacheId
-        ]
-      );
-
-      mappingsCreated++;
-    }
+    `, [torrent.imdb_id]);
   }
+
+  if (existingCache.rowCount === 0) {
+
+    const insertedCache = await pool.query(`
+      INSERT INTO trakt_cache (
+        original_title,
+        imdb_id,
+        trakt_status
+      )
+      VALUES (
+        $1,
+        $2,
+        'pending'
+      )
+      RETURNING id
+    `, [
+      torrent.title,
+      torrent.imdb_id
+    ]);
+
+    cacheCreated++;
+
+    console.log(
+      `[CACHE] ${torrent.title}`
+    );
+  }
+}
 
   console.log("========== COMPLETE ==========");
   console.log(`Cache entries created: ${cacheCreated}`);
-  console.log(`Mappings created: ${mappingsCreated}`);
 }

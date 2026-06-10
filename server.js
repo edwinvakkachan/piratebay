@@ -49,7 +49,7 @@ async function main() {
   //   await updateYtsRunTime();
   // }
 
-//   await buildTraktCache();
+  await buildTraktCache();
  
 // await radarrsonarr();
 // await sendToArr();
