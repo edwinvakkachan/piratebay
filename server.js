@@ -38,14 +38,14 @@ async function main() {
     await initDB();
     console.log("db is ready");
 
-    //     await delay(1000);
-    // await piratebayTv();
-    // await delay(1000);
-    // await piratebaymovie();
-    // await delay(1000);
-    // await yts();
-    // await delay(1000);
-    // await eztv();
+        await delay(1000);
+    await piratebayTv();
+    await delay(1000);
+    await piratebaymovie();
+    await delay(1000);
+    await yts();
+    await delay(1000);
+    await eztv();
 
   // // // //   if (await shouldRunYts()) {
   // // // //     console.log('Running YTS sync...');
@@ -54,8 +54,8 @@ async function main() {
   // // // //   await updateYtsRunTime();
   // // // // }
 
-  // await buildTraktCache();
-  // await populateMetadataFromOMDb();
+  await buildTraktCache();
+  await populateMetadataFromOMDb(); 
    
   const isRadarrAvailable = await checkRadarr();
   const isSonarrAvailable = await checkSonarr();
@@ -63,18 +63,23 @@ async function main() {
   if(isRadarrAvailable && isSonarrAvailable) {
     await updateTmdbIdsForRadarr();
     await updateTvdbIdsForSonarr();
-    // await syncMediaExclusions();
+  }
+
+
+
+
+  if(isRadarrAvailable && isSonarrAvailable) {
+   await syncMediaExclusions();
     await radarrsonarr(); // creating sonarr and radarr table
     await sendToArr();
-
   }
   
   
-  // const result = await isQBittorrentAvailable();
-  // if(result){
-  // await sendMissingRadarrToQbit();
-  // await sendMissingSonarrToQbit();
-  //   }
+  const result = await isQBittorrentAvailable();
+  if(result){
+  await sendMissingRadarrToQbit();
+  await sendMissingSonarrToQbit();
+    }
 
 
 

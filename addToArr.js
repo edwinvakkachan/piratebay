@@ -182,16 +182,22 @@ export async function sendToArr() {
   const movieProfile = await getRadarrQualityProfile();
   const showProfile = await getSonarrQualityProfile();
 
-  const movieResult = await pool.query(`
-    SELECT *
-    FROM trakt_cache
-    WHERE trakt_type = 'movie'
-      AND imdb_id IS NOT NULL
-      AND tmdb_id IS NOT NULL
-      AND year >= EXTRACT(YEAR FROM CURRENT_DATE) - 1
-      AND COALESCE(trakt_status,'pending') <> 'added'
-    ORDER BY id
-  `);
+const movieResult = await pool.query(`
+  SELECT *
+  FROM trakt_cache tc
+  WHERE tc.trakt_type = 'movie'
+    AND tc.imdb_id IS NOT NULL
+    AND tc.tmdb_id IS NOT NULL
+    AND tc.year >= EXTRACT(YEAR FROM CURRENT_DATE) - 1
+    AND COALESCE(tc.trakt_status,'pending') <> 'added'
+    AND NOT EXISTS (
+      SELECT 1
+      FROM media_exclusions me
+      WHERE me.source = 'radarr'
+        AND me.tmdb_id = tc.tmdb_id
+    )
+  ORDER BY tc.id
+`);
 
   console.log(
     `🎬 Movies to import: ${movieResult.rows.length}`
@@ -244,15 +250,21 @@ await axios.post(
     }
   }
 
-  const showResult = await pool.query(`
-    SELECT *
-    FROM trakt_cache
-    WHERE trakt_type = 'tv'
-      AND imdb_id IS NOT NULL
-      AND tvdb_id IS NOT NULL
-      AND COALESCE(trakt_status,'pending') <> 'added'
-    ORDER BY id
-  `);
+const showResult = await pool.query(`
+  SELECT *
+  FROM trakt_cache tc
+  WHERE tc.trakt_type = 'show'
+    AND tc.imdb_id IS NOT NULL
+    AND tc.tvdb_id IS NOT NULL
+    AND COALESCE(tc.trakt_status,'pending') <> 'added'
+    AND NOT EXISTS (
+      SELECT 1
+      FROM media_exclusions me
+      WHERE me.source = 'sonarr'
+        AND me.tvdb_id = tc.tvdb_id
+    )
+  ORDER BY tc.id
+`);
 
   console.log(
     `📺 Shows to import: ${showResult.rows.length}`
