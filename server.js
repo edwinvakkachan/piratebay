@@ -22,6 +22,9 @@ import { sendToArr } from "./addToArr.js";
 import { piratebayTv,piratebaymovie } from "./piratebay/piratebay.js";
 import { populateMetadataFromOMDb } from "./omdb/populateMetadataFromOMDb.js";
 import { checkRadarr, checkSonarr } from "./radarrSonarravailabilitycheck.js";
+import { syncMediaExclusions } from "./addingtorrents/syncMediaExclusions.js";
+
+
 
 async function main() {
   try {
@@ -35,20 +38,12 @@ async function main() {
     await initDB();
     console.log("db is ready");
 
-    await delay(1000);
-    await piratebayTv();
-    await delay(1000);
-    await piratebaymovie();
-    await delay(1000);
-    await yts();
-    await delay(1000);
-    await eztv();
-  // // //   if (await shouldRunYts()) {
-  // // //     console.log('Running YTS sync...');
+  // // // //   if (await shouldRunYts()) {
+  // // // //     console.log('Running YTS sync...');
       
       
-  // // //   await updateYtsRunTime();
-  // // // }
+  // // // //   await updateYtsRunTime();
+  // // // // }
 
   await buildTraktCache();
   await populateMetadataFromOMDb();
@@ -57,6 +52,7 @@ async function main() {
   const isSonarrAvailable = await checkSonarr();
 
   if(isRadarrAvailable && isSonarrAvailable) {
+    await syncMediaExclusions();
     await radarrsonarr();
     await sendToArr();
 
