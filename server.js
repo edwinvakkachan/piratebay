@@ -65,10 +65,11 @@ async function main() {
     await updateTvdbIdsForSonarr();
   }
 
+  const isRadarrAvailableagain = await checkRadarr();
+  const isSonarrAvailableagain = await checkSonarr();
 
 
-
-  if(isRadarrAvailable && isSonarrAvailable) {
+  if(isRadarrAvailableagain && isSonarrAvailableagain) {
    await syncMediaExclusions();
     await radarrsonarr(); // creating sonarr and radarr table
     await sendToArr();
