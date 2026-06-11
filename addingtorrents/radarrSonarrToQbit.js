@@ -54,6 +54,7 @@ ORDER BY seeders DESC
 LIMIT 1
 `, [item.imdb_id]);
 
+
       if (torrentResult.rows.length === 0) {
         console.log(item.imdb_id)
         console.log(`❌ No torrent found`);

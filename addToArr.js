@@ -190,12 +190,27 @@ const movieResult = await pool.query(`
     AND tc.tmdb_id IS NOT NULL
     AND tc.year >= EXTRACT(YEAR FROM CURRENT_DATE) - 1
     AND COALESCE(tc.trakt_status,'pending') <> 'added'
+
+    -- Not in Radarr
+    AND NOT EXISTS (
+      SELECT 1
+      FROM radarrsonarr rs
+      WHERE rs.source = 'radarr'
+      AND rs.removed= FALSE
+        AND (
+          rs.imdb_id = tc.imdb_id
+          OR rs.tmdb_id = tc.tmdb_id
+        )
+    )
+
+    -- Not in exclusions
     AND NOT EXISTS (
       SELECT 1
       FROM media_exclusions me
       WHERE me.source = 'radarr'
         AND me.tmdb_id = tc.tmdb_id
     )
+
   ORDER BY tc.id
 `);
 
@@ -257,12 +272,27 @@ const showResult = await pool.query(`
     AND tc.imdb_id IS NOT NULL
     AND tc.tvdb_id IS NOT NULL
     AND COALESCE(tc.trakt_status,'pending') <> 'added'
+
+    -- Not in Sonarr
+    AND NOT EXISTS (
+      SELECT 1
+      FROM radarrsonarr rs
+      WHERE rs.source = 'sonarr'
+      AND rs.removed = FALSE
+        AND (
+          rs.imdb_id = tc.imdb_id
+          OR rs.tvdb_id = tc.tvdb_id
+        )
+    )
+
+    -- Not in exclusions
     AND NOT EXISTS (
       SELECT 1
       FROM media_exclusions me
       WHERE me.source = 'sonarr'
         AND me.tvdb_id = tc.tvdb_id
     )
+
   ORDER BY tc.id
 `);
 
