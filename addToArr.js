@@ -227,12 +227,28 @@ const movieResult = await pool.query(`
       );
 const tmdbId = movie.tmdb_id;
 
+// await axios.post(
+//   `${RADARR_URL}/api/v3/movie`,
+//   {
+//     tmdbId,
+//     qualityProfileId: movieProfile,
+//     rootFolderPath: movieRoot,
+//     monitored: false,
+//     tags: movieTagIds
+//   },
+//   {
+//     headers: {
+//       "X-Api-Key": RADARR_API_KEY
+//     }
+//   }
+// );
+
 await axios.post(
   `${RADARR_URL}/api/v3/movie`,
   {
     tmdbId,
     qualityProfileId: movieProfile,
-    rootFolderPath: movieRoot,
+    rootFolderPath: '/data/2tb/media/English',
     monitored: false,
     tags: movieTagIds
   },
@@ -242,6 +258,7 @@ await axios.post(
     }
   }
 );
+
 
       await pool.query(`
         UPDATE trakt_cache

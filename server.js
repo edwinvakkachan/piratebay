@@ -47,12 +47,12 @@ async function main() {
     await delay(1000);
     await eztv();
 
-  // // //   if (await shouldRunYts()) {
-  // // //     console.log('Running YTS sync...');
+  // //   if (await shouldRunYts()) {
+  // //     console.log('Running YTS sync...');
       
       
-  // // //   await updateYtsRunTime();
-  // // // }
+  // //   await updateYtsRunTime();
+  // // }
 
   await buildTraktCache();
   await populateMetadataFromOMDb(); 
