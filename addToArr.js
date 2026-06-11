@@ -187,6 +187,7 @@ export async function sendToArr() {
     FROM trakt_cache
     WHERE trakt_type = 'movie'
       AND imdb_id IS NOT NULL
+      AND tmdb_id IS NOT NULL
       AND year >= EXTRACT(YEAR FROM CURRENT_DATE) - 1
       AND COALESCE(trakt_status,'pending') <> 'added'
     ORDER BY id
@@ -203,17 +204,7 @@ export async function sendToArr() {
       console.log(
         `🎬 Adding Movie: ${movie.clean_title}`
       );
-const lookup = await axios.get(
-  `${RADARR_URL}/api/v3/movie/lookup/imdb?imdbId=${movie.imdb_id}`,
-  {
-    headers: {
-      "X-Api-Key": RADARR_API_KEY
-    }
-  }
-);
-
-const tmdbId = lookup.data.tmdbId;
-
+const tmdbId = movie.tmdb_id;
 
 await axios.post(
   `${RADARR_URL}/api/v3/movie`,
@@ -258,6 +249,7 @@ await axios.post(
     FROM trakt_cache
     WHERE trakt_type = 'tv'
       AND imdb_id IS NOT NULL
+      AND tvdb_id IS NOT NULL
       AND COALESCE(trakt_status,'pending') <> 'added'
     ORDER BY id
   `);
@@ -274,26 +266,13 @@ await axios.post(
         `📺 Adding Show: ${show.clean_title}`
       );
 
-const lookup = await axios.get(
-  `${SONARR_URL}/api/v3/series/lookup?term=imdb:${show.imdb_id}`,
-  {
-    headers: {
-      "X-Api-Key": SONARR_API_KEY
-    }
-  }
-);
 
-if (!lookup.data.length) {
-  throw new Error(`Series not found for ${show.imdb_id}`);
-}
-
-const series = lookup.data[0];
 
 await axios.post(
   `${SONARR_URL}/api/v3/series`,
   {
-    tvdbId: series.tvdbId,
-    title: series.title,
+    tvdbId: show.tvdb_id,
+    title: show.clean_title,
     qualityProfileId: showProfile,
     rootFolderPath: "/data/4tb/media/TV-English",
     monitored: false,
