@@ -268,7 +268,7 @@ await axios.post(
 const showResult = await pool.query(`
   SELECT *
   FROM trakt_cache tc
-  WHERE tc.trakt_type = 'show'
+  WHERE tc.trakt_type = 'tv'
     AND tc.imdb_id IS NOT NULL
     AND tc.tvdb_id IS NOT NULL
     AND COALESCE(tc.trakt_status,'pending') <> 'added'
