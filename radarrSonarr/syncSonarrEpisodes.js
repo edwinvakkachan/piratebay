@@ -54,48 +54,50 @@ let count = 0;
     );
   }
 
-        const result = await pool.query(
-          `
-          INSERT INTO radarrsonarr_episodes (
-            series_id,
-            sonarr_series_id,
-            episode_id,
-            season_number,
-            episode_number,
-            title,
-            air_date,
-            monitored,
-            has_file,
-            updated_at
-          )
-          VALUES (
-            $1,$2,$3,$4,$5,
-            $6,$7,$8,$9,
-            NOW()
-          )
-          ON CONFLICT (episode_id)
-          DO UPDATE SET
-            season_number = EXCLUDED.season_number,
-            episode_number = EXCLUDED.episode_number,
-            title = EXCLUDED.title,
-            air_date = EXCLUDED.air_date,
-            monitored = EXCLUDED.monitored,
-            has_file = EXCLUDED.has_file,
-            updated_at = NOW()
-          RETURNING xmax = 0 AS inserted
-          `,
-          [
-            series.id,
-            ep.seriesId,
-            ep.id,
-            ep.seasonNumber,
-            ep.episodeNumber,
-            ep.title,
-            ep.airDateUtc,
-            ep.monitored,
-            ep.hasFile
-          ]
-        );
+const result = await pool.query(
+  `
+  INSERT INTO radarrsonarr_episodes (
+    series_id,
+    sonarr_series_id,
+    episode_id,
+    season_number,
+    episode_number,
+    title,
+    air_date,
+    monitored,
+    has_file,
+    updated_at
+  )
+  VALUES (
+    $1,$2,$3,$4,$5,
+    $6,$7,$8,$9,
+    NOW()
+  )
+  ON CONFLICT (episode_id)
+  DO UPDATE SET
+    series_id        = EXCLUDED.series_id,
+    sonarr_series_id = EXCLUDED.sonarr_series_id,
+    season_number    = EXCLUDED.season_number,
+    episode_number   = EXCLUDED.episode_number,
+    title            = EXCLUDED.title,
+    air_date         = EXCLUDED.air_date,
+    monitored        = EXCLUDED.monitored,
+    has_file         = EXCLUDED.has_file,
+    updated_at       = NOW()
+  RETURNING xmax = 0 AS inserted
+  `,
+  [
+    series.id,
+    ep.seriesId,
+    ep.id,
+    ep.seasonNumber,
+    ep.episodeNumber,
+    ep.title,
+    ep.airDateUtc,
+    ep.monitored,
+    ep.hasFile
+  ]
+);
 
         if (result.rows[0].inserted) {
           inserted++;
