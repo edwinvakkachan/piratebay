@@ -2,7 +2,7 @@ import axios from "axios";
 import dotenv from "dotenv";
 import pool from "../db/pool.js";
 import { delay } from "../delay.js";
-
+import { extractEpisodeAndSeasonDetails } from "../addingtorrents/extractEpisodeAndSeasonDetails.js.js";
 
 dotenv.config();
 

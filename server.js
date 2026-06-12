@@ -24,8 +24,8 @@ import { populateMetadataFromOMDb } from "./omdb/populateMetadataFromOMDb.js";
 import { checkRadarr, checkSonarr } from "./radarrSonarravailabilitycheck.js";
 import { syncMediaExclusions } from "./addingtorrents/syncMediaExclusions.js";
 import { updateTmdbIdsForRadarr,updateTvdbIdsForSonarr } from "./metadata/updateTmdbFromTraktCache.js";
-
-
+import { sonarrTable } from "./radarrSonarr/sonarrtable.js";
+import { extractEpisodeAndSeasonDetails } from "./addingtorrents/extractEpisodeAndSeasonDetails.js.js";
 async function main() {
   try {
     await log();
@@ -56,6 +56,8 @@ async function main() {
 
   await buildTraktCache();
   await populateMetadataFromOMDb(); 
+  await extractEpisodeAndSeasonDetails();
+
    
   const isRadarrAvailable = await checkRadarr();
   const isSonarrAvailable = await checkSonarr();
@@ -72,6 +74,7 @@ async function main() {
   if(isRadarrAvailableagain && isSonarrAvailableagain) {
    await syncMediaExclusions();
     await radarrsonarr(); // creating sonarr and radarr table
+    await sonarrTable();
     await sendToArr();
   }
   

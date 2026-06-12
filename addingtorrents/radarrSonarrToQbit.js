@@ -1,7 +1,7 @@
 import pool from "../db/pool.js";
 import axios from "axios";
 import { radarrToTorrent,SonnarToTorrent } from "../qbittorrent/qb.js";
-import { extractEpisodeAndSeasonDetails } from "./extractEpisodeAndSeasonDetails.js.js";
+// import { extractEpisodeAndSeasonDetails } from "./extractEpisodeAndSeasonDetails.js.js";
 
 
 
@@ -130,16 +130,23 @@ export async function sendMissingSonarrToQbit(){
   console.log("🚀 Sonarr → qBittorrent Started");
   console.log("========================================");
 
-    const showResult = await pool.query(`
-  SELECT *
-  FROM radarrsonarr
-  WHERE removed = FALSE
-    AND source = 'sonarr'
-    AND COALESCE(size_on_disk,0) = 0
+const showResult = await pool.query(`
+  SELECT
+    e.*,
+    s.title AS series_title,
+    s.imdb_id,
+    s.tvdb_id
+  FROM radarrsonarr_episodes e
+  JOIN radarrsonarr s
+    ON s.id = e.series_id
+  WHERE e.monitored = FALSE
+    AND e.has_file = FALSE
+    AND s.removed = FALSE
+    AND e.COALESCE(grabbed,FALSE) = FALSE
 `);
 
   console.log(
-      `📚 Found ${showResult.rows.length} missing movies/shows`
+      `📚 Found ${showResult.rows.length} missing shows`
     );
 
     let added = 0;
@@ -147,10 +154,12 @@ export async function sendMissingSonarrToQbit(){
 
     for (const item of showResult.rows) {
       console.log("");
-      console.log(
-        `🔍 Searching: ${item.title} (${item.source})`
-      );
-await extractEpisodeAndSeasonDetails(item.imdb_id)
+console.log(
+  `🔍 Searching: ${item.series_title} S${String(item.season_number).padStart(2,'0')}E${String(item.episode_number).padStart(2,'0')}`
+);
+console.log(
+  `IMDb: ${item.imdb_id} S${item.season_number}E${item.episode_number}`
+);
 
 const torrentResult = await pool.query(`
 SELECT *
@@ -162,14 +171,18 @@ FROM (
            ) AS rn
     FROM piratebay_movie_magnets
     WHERE imdb_id = $1
+      AND season = $2
+      AND episode = $3
       AND CAST(size AS BIGINT) < 1073741824
       AND sent_to_qbittorrent = FALSE
-      AND COALESCE(skipped_duplicate,FALSE) = FALSE
+      AND COALESCE(e.grabbed,FALSE) = FALSE
 ) t
 WHERE rn = 1
-ORDER BY season, episode
-`, [item.imdb_id]);
-
+`, [
+  item.imdb_id,
+  item.season_number,
+  item.episode_number
+]);
   if (torrentResult.rows.length === 0) {
         console.log(item.imdb_id)
         console.log(`❌ No torrent found`);
@@ -204,6 +217,12 @@ for (const torrent of torrentResult.rows){
 
     await SonnarToTorrent(torrent.magnet)
 
+await pool.query(`
+  UPDATE piratebay_movie_magnets
+  SET sent_to_qbittorrent = TRUE
+  WHERE id = $1
+`, [torrent.id]);
+
     await pool.query(`UPDATE piratebay_movie_magnets
 SET skipped_duplicate = TRUE
 WHERE imdb_id = $1
@@ -214,13 +233,16 @@ WHERE imdb_id = $1
 
 
 await pool.query(`
-  UPDATE piratebay_movie_magnets
-SET sent_to_qbittorrent = TRUE
-WHERE id = $1
-  `,[
-    torrent.id
-  ])
-
+  UPDATE radarrsonarr_episodes
+  SET grabbed = TRUE,
+      updated_at = NOW()
+  WHERE episode_id = $1
+`, [
+  item.episode_id
+]);
+console.log(
+  `✅ Grabbed: ${item.series_title} S${item.season_number}E${item.episode_number}`
+);
     console.log("📥 Sent to qBittorrent");
 
     added++;
@@ -231,7 +253,6 @@ WHERE id = $1
     );
   }
 }
-
     }
 
     console.log("");

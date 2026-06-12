@@ -20,31 +20,38 @@ function extractSeasonEpisode(title) {
   };
 }
 
-export async function extractEpisodeAndSeasonDetails(imdb_id){
+export async function extractEpisodeAndSeasonDetails() {
 
-const shows = await pool.query(`
-    SELECT *
-FROM piratebay_movie_magnets
-WHERE imdb_id = $1
-  `,[
-    imdb_id
-  ]);
+  const imdbids = await pool.query(`
+    SELECT DISTINCT imdb_id
+    FROM trakt_cache
+    WHERE trakt_type = 'tv'
+      AND imdb_id IS NOT NULL
+  `);
 
-for (const show of shows.rows){
+  for (const row of imdbids.rows) {
 
-    const { season, episode } =
-  extractSeasonEpisode(show.title);
-await pool.query(`
-  UPDATE piratebay_movie_magnets
-  SET season = $1,
-      episode = $2
-  WHERE id = $3
-`, [
-  season,
-  episode,
-  show.id
-]);
-  
-}
+    const shows = await pool.query(`
+      SELECT id, title
+      FROM piratebay_movie_magnets
+      WHERE imdb_id = $1
+    `, [row.imdb_id]);
 
+    for (const show of shows.rows) {
+
+      const { season, episode } =
+        extractSeasonEpisode(show.title);
+
+      await pool.query(`
+        UPDATE piratebay_movie_magnets
+        SET season = $1,
+            episode = $2
+        WHERE id = $3
+      `, [
+        season,
+        episode,
+        show.id
+      ]);
+    }
+  }
 }
