@@ -59,13 +59,13 @@ async function main() {
   // await extractEpisodeAndSeasonDetails();
 
    
-  const isRadarrAvailable = await checkRadarr();
-  const isSonarrAvailable = await checkSonarr();
+  // const isRadarrAvailable = await checkRadarr();
+  // const isSonarrAvailable = await checkSonarr();
 
-  if(isRadarrAvailable && isSonarrAvailable) {
-    // await updateTmdbIdsForRadarr();
-    // await updateTvdbIdsForSonarr();
-  }
+  // if(isRadarrAvailable && isSonarrAvailable) {
+  //   await updateTmdbIdsForRadarr();
+  //   await updateTvdbIdsForSonarr();
+  // }
 
   const isRadarrAvailableagain = await checkRadarr();
   const isSonarrAvailableagain = await checkSonarr();
@@ -73,7 +73,7 @@ async function main() {
 
   if(isRadarrAvailableagain && isSonarrAvailableagain) {
   //  await syncMediaExclusions();
-  //   await radarrsonarr(); 
+    await radarrsonarr(); 
     await sonarrTable();
     await sendToArr();
   }
