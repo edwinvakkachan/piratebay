@@ -176,7 +176,6 @@ FROM (
     WHERE imdb_id = $1
       AND season = $2
       AND episode = $3
-      AND CAST(size AS BIGINT) < 1073741824
       AND sent_to_qbittorrent = FALSE
 ) t
 WHERE rn = 1
@@ -192,7 +191,7 @@ WHERE rn = 1
         continue;
       }
 
-
+// AND CAST(size AS BIGINT) < 1073741824
      
 for (const torrent of torrentResult.rows){
 
