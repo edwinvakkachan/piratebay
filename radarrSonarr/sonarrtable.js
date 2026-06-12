@@ -8,5 +8,5 @@ export async function sonarrTable(){
 // await syncSonarrSeries();
 await syncSonarrSeasons();
 await  syncSonarrEpisodes();
-await syncSonarrEpisodeFiles();
+
 }

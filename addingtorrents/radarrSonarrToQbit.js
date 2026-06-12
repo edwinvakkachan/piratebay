@@ -139,10 +139,13 @@ const showResult = await pool.query(`
   FROM radarrsonarr_episodes e
   JOIN radarrsonarr s
     ON s.id = e.series_id
-  WHERE e.monitored = FALSE
-    AND e.has_file = FALSE
+  WHERE e.has_file = FALSE
     AND s.removed = FALSE
-    AND e.COALESCE(grabbed,FALSE) = FALSE
+    AND COALESCE(e.grabbed, FALSE) = FALSE
+    AND 'sitescrapeshows' = ANY(s.tag_names)
+    AND e.air_date BETWEEN NOW() - INTERVAL '6 months' AND NOW()
+  ORDER BY e.air_date DESC
+
 `);
 
   console.log(
@@ -175,7 +178,6 @@ FROM (
       AND episode = $3
       AND CAST(size AS BIGINT) < 1073741824
       AND sent_to_qbittorrent = FALSE
-      AND COALESCE(e.grabbed,FALSE) = FALSE
 ) t
 WHERE rn = 1
 `, [

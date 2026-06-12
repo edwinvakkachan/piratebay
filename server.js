@@ -38,7 +38,7 @@ async function main() {
     await initDB();
     console.log("db is ready");
 
-        await delay(1000);
+    await delay(1000);
     await piratebayTv();
     await delay(1000);
     await piratebaymovie();
@@ -73,7 +73,7 @@ async function main() {
 
   if(isRadarrAvailableagain && isSonarrAvailableagain) {
    await syncMediaExclusions();
-    await radarrsonarr(); // creating sonarr and radarr table
+    await radarrsonarr(); 
     await sonarrTable();
     await sendToArr();
   }

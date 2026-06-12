@@ -21,7 +21,7 @@ function extractSeasonEpisode(title) {
 }
 
 export async function extractEpisodeAndSeasonDetails() {
-
+console.log('running extractEpisodeAndSeasonDetails()')
   const imdbids = await pool.query(`
     SELECT DISTINCT imdb_id
     FROM trakt_cache
@@ -38,7 +38,7 @@ export async function extractEpisodeAndSeasonDetails() {
     `, [row.imdb_id]);
 
     for (const show of shows.rows) {
-
+console.log(show.title);
       const { season, episode } =
         extractSeasonEpisode(show.title);
 
