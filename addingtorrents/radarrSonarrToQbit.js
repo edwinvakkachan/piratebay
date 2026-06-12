@@ -143,7 +143,9 @@ const showResult = await pool.query(`
     AND s.removed = FALSE
     AND COALESCE(e.grabbed, FALSE) = FALSE
     AND 'sitescrapeshows' = ANY(s.tag_names)
-    AND e.air_date BETWEEN NOW() - INTERVAL '6 months' AND NOW()
+    AND e.air_date IS NOT NULL
+AND e.air_date <= NOW()
+AND e.air_date >= NOW() - INTERVAL '6 months'
   ORDER BY e.air_date DESC
 
 `);
