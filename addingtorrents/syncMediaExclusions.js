@@ -9,7 +9,7 @@ export async function syncMediaExclusions() {
   console.log("========== MEDIA EXCLUSIONS ==========");
 
   await syncRadarrExclusions();
-//   await syncSonarrExclusions();
+  await syncSonarrExclusions();
 
   console.log("========== COMPLETE ==========");
 }

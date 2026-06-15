@@ -227,21 +227,7 @@ const movieResult = await pool.query(`
       );
 const tmdbId = movie.tmdb_id;
 
-// await axios.post(
-//   `${RADARR_URL}/api/v3/movie`,
-//   {
-//     tmdbId,
-//     qualityProfileId: movieProfile,
-//     rootFolderPath: movieRoot,
-//     monitored: false,
-//     tags: movieTagIds
-//   },
-//   {
-//     headers: {
-//       "X-Api-Key": RADARR_API_KEY
-//     }
-//   }
-// );
+
 
 await axios.post(
   `${RADARR_URL}/api/v3/movie`,
@@ -350,11 +336,11 @@ await axios.post(
   }
 );
 
-      await pool.query(`
-        UPDATE trakt_cache
-        SET trakt_status='added'
-        WHERE id=$1
-      `,[show.id]);
+      // await pool.query(`
+      //   UPDATE trakt_cache
+      //   SET trakt_status='added'
+      //   WHERE id=$1
+      // `,[show.id]);
 
       console.log(
         `✅ Added Show: ${show.clean_title}`
@@ -366,9 +352,9 @@ await axios.post(
         `❌ Show Failed: ${show.clean_title}`
       );
 
-      console.log(
-        err.response?.data || err.message
-      );
+      // console.log(
+      //   err.response?.data || err.message
+      // );
     }
   }
 

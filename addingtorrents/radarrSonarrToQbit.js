@@ -43,17 +43,26 @@ export async function sendMissingRadarrToQbit() {
         `🔍 Searching: ${item.title} (${item.source})`
       );
 
+// const torrentResult = await pool.query(`
+// SELECT *
+// FROM piratebay_movie_magnets
+// WHERE imdb_id = $1
+//   AND CAST(size AS BIGINT) < 1610612736
+//   AND sent_to_qbittorrent = FALSE
+//   AND COALESCE(skipped_duplicate,FALSE) = FALSE
+// ORDER BY seeders DESC
+// LIMIT 1
+// `, [item.imdb_id]);
+
 const torrentResult = await pool.query(`
 SELECT *
 FROM piratebay_movie_magnets
 WHERE imdb_id = $1
-  AND CAST(size AS BIGINT) < 1610612736
   AND sent_to_qbittorrent = FALSE
   AND COALESCE(skipped_duplicate,FALSE) = FALSE
 ORDER BY seeders DESC
 LIMIT 1
 `, [item.imdb_id]);
-
 
       if (torrentResult.rows.length === 0) {
         console.log(item.imdb_id)
@@ -84,6 +93,8 @@ LIMIT 1
 
       try {
         await radarrToTorrent(torrent.magnet);
+
+
         await pool.query(`
           UPDATE piratebay_movie_magnets
           SET sent_to_qbittorrent = TRUE
@@ -149,6 +160,7 @@ AND e.air_date >= NOW() - INTERVAL '6 months'
   ORDER BY e.air_date DESC
 
 `);
+
 
   console.log(
       `📚 Found ${showResult.rows.length} missing shows`
@@ -243,6 +255,9 @@ await pool.query(`
 `, [
   item.episode_id
 ]);
+
+
+
 console.log(
   `✅ Grabbed: ${item.series_title} S${item.season_number}E${item.episode_number}`
 );

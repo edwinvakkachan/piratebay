@@ -47,45 +47,13 @@ async function main() {
     await delay(1000);
     await eztv();
 
-  // //   if (await shouldRunYts()) {
-  // //     console.log('Running YTS sync...');
-      
-      
-  // //   await updateYtsRunTime();
-  // // }
+
 
   await buildTraktCache();
   await populateMetadataFromOMDb(); 
   await extractEpisodeAndSeasonDetails();
 
-   
-  // const isRadarrAvailable = await checkRadarr();
-  // const isSonarrAvailable = await checkSonarr();
-
-  // if(isRadarrAvailable && isSonarrAvailable) {
-  //   await updateTmdbIdsForRadarr();
-  //   await updateTvdbIdsForSonarr();
-  // }
-
-  // const isRadarrAvailableagain = await checkRadarr();
-  // const isSonarrAvailableagain = await checkSonarr();
-
-
-  // if(isRadarrAvailableagain && isSonarrAvailableagain) {
-  // //  await syncMediaExclusions();
-  //   await radarrsonarr(); 
-  //   await sonarrTable();
-  //   await sendToArr();
-  // }
   
-  
-  // const result = await isQBittorrentAvailable();
-  // if(result){
-  // await sendMissingRadarrToQbit();
-  // await sendMissingSonarrToQbit();
-  //   }
-
-
 
     await publishMessage({
       message: "Pirate Bay movie scraping completed successfully"

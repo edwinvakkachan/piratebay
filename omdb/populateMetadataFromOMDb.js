@@ -12,15 +12,15 @@ export async function populateMetadataFromOMDb() {
 
   console.log("========== OMDB METADATA SYNC ==========");
 
-  const result = await pool.query(`
-    SELECT DISTINCT imdb_id
-    FROM trakt_cache
-    WHERE imdb_id IS NOT NULL
-      AND (
-        year IS NULL
-        OR trakt_type IS NULL
-      )
-    ORDER BY imdb_id
+  const result = await pool.query(`SELECT DISTINCT imdb_id
+FROM trakt_cache
+WHERE imdb_id IS NOT NULL
+  AND COALESCE(trakt_status,'pending') <> 'omdb_not_found'
+  AND (
+    year IS NULL
+    OR trakt_type IS NULL
+  )
+ORDER BY imdb_id;
   `);
 
   console.log(
@@ -35,10 +35,7 @@ export async function populateMetadataFromOMDb() {
     try {
 
 
-        if (
-  !row.imdb_id ||
-  row.imdb_id === "0"
-) {
+        if (!/^tt\d+$/.test(row.imdb_id) || row.imdb_id === 'tt0') {
   continue;
 }
 
@@ -66,6 +63,13 @@ export async function populateMetadataFromOMDb() {
         console.log(
           `[NOT FOUND] ${imdbId}`
         );
+
+         await pool.query(`
+  UPDATE trakt_cache
+  SET trakt_status = 'omdb_not_found'
+  WHERE imdb_id = $1
+`, [imdbId]);
+
 
         failed++;
         continue;
