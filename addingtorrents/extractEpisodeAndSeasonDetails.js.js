@@ -35,12 +35,29 @@ console.log('running extractEpisodeAndSeasonDetails()')
       SELECT id, title
       FROM piratebay_movie_magnets
       WHERE imdb_id = $1
+       AND (
+      season IS NULL
+      OR episode IS NULL
+    )
     `, [row.imdb_id]);
 
     for (const show of shows.rows) {
 console.log(show.title);
       const { season, episode } =
         extractSeasonEpisode(show.title);
+
+if (season === null || episode === null) {
+ console.log('extration failed')
+  await pool.query(`
+  UPDATE piratebay_movie_magnets
+  SET season = -1,
+      episode = -1
+  WHERE id = $1
+`, [show.id]);
+
+continue;
+}
+
 
       await pool.query(`
         UPDATE piratebay_movie_magnets

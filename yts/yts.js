@@ -38,6 +38,8 @@ function sizeToBytes(sizeStr) {
 }
 
 export async function yts() {
+  try {
+    
 
   console.log('\n========== YTS SYNC START ==========');
 
@@ -150,6 +152,11 @@ export async function yts() {
 
   console.log(`Inserted: ${inserted}`);
   console.log('========== YTS SYNC COMPLETE ==========\n');
+
+  } catch (error) {
+    console.log('erron in yts()');
+    console.log(error)
+  }
 }
 
 export async function shouldRunYts() {
