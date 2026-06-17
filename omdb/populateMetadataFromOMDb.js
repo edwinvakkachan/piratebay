@@ -12,16 +12,23 @@ export async function populateMetadataFromOMDb() {
 
   console.log("========== OMDB METADATA SYNC ==========");
 
-  const result = await pool.query(`SELECT DISTINCT imdb_id
-FROM trakt_cache
-WHERE imdb_id IS NOT NULL
-  AND COALESCE(trakt_status,'pending') <> 'omdb_not_found'
-  AND (
-    year IS NULL
-    OR trakt_type IS NULL
-  )
-ORDER BY imdb_id;
-  `);
+const result = await pool.query(`
+  SELECT DISTINCT imdb_id
+  FROM trakt_cache
+  WHERE imdb_id IS NOT NULL
+    AND COALESCE(trakt_status,'pending') <> 'omdb_not_found'
+    AND (
+      (
+        trakt_type = 'movie'
+        AND year >= EXTRACT(YEAR FROM CURRENT_DATE) - 1
+      )
+      OR
+      (
+        trakt_type = 'tv'
+      )
+    )
+  ORDER BY imdb_id;
+`);
 
   console.log(
     `Found ${result.rowCount} IMDb IDs to process`

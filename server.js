@@ -26,6 +26,11 @@ import { syncMediaExclusions } from "./addingtorrents/syncMediaExclusions.js";
 import { updateTmdbIdsForRadarr,updateTvdbIdsForSonarr } from "./metadata/updateTmdbFromTraktCache.js";
 import { sonarrTable } from "./radarrSonarr/sonarrtable.js";
 import { extractEpisodeAndSeasonDetails } from "./addingtorrents/extractEpisodeAndSeasonDetails.js.js";
+import { updateMovieYears } from "./supabase/updateMovieYears.js";
+import { detectTraktTVShows } from "./supabase/detectTraktTVShows.js";
+
+
+
 async function main() {
   try {
     await log();
@@ -50,6 +55,8 @@ async function main() {
 
 
   await buildTraktCache();
+  await updateMovieYears();
+  await detectTraktTVShows();
   await populateMetadataFromOMDb(); 
   await extractEpisodeAndSeasonDetails();
 
@@ -59,9 +66,8 @@ async function main() {
       message: "Pirate Bay movie scraping completed successfully"
     });
 
-
-
     await log();
+    
   } catch (error) {
     console.error("Fatal error in main():");
     console.error(error);
