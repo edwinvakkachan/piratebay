@@ -43,22 +43,22 @@ async function main() {
     await initDB();
     console.log("db is ready");
 
-    // await delay(1000);
-    // await piratebayTv();
-    // await delay(1000);
-    // await piratebaymovie();
-    // await delay(1000);
-    // await yts();
-    // await delay(1000);
-    // await eztv();
+    await delay(1000);
+    await piratebayTv();
+    await delay(1000);
+    await piratebaymovie();
+    await delay(1000);
+    await yts();
+    await delay(1000);
+    await eztv();
 
 
 
-  // await buildTraktCache();
-  // await updateMovieYears();
-  // await detectTraktTVShows();
+  await buildTraktCache();
+  await updateMovieYears();
+  await detectTraktTVShows();
   await populateMetadataFromOMDb(); 
-  // await extractEpisodeAndSeasonDetails();
+  await extractEpisodeAndSeasonDetails();
 
   
 
