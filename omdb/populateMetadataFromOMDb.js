@@ -17,7 +17,8 @@ const result = await pool.query(`
   FROM trakt_cache
   WHERE imdb_id IS NOT NULL
     AND imdb_rating IS NULL
-    AND COALESCE(omdb_status,'pending') <> 'omdb_not_found'
+    AND COALESCE(omdb_status, 'pending')
+      NOT IN ('found', 'omdb_not_found')
     AND (
       (
         trakt_type = 'movie'
@@ -131,6 +132,7 @@ const language =
       await pool.query(`
         UPDATE trakt_cache
         SET
+          omdb_status = 'found',
           clean_title = $1,
           year = $2,
           trakt_type = COALESCE($3, trakt_type),
