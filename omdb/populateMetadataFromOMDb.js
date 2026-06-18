@@ -169,8 +169,8 @@ const language =
         metascore,
         imdbRating,
         language,
-        data.genre,
-        data.imdbvotes,
+        data.Genre,
+        data.imdbVotes,
         imdbId
       ]);
 
