@@ -65,7 +65,7 @@ async function main() {
     await publishMessage({
       message: "Pirate Bay movie scraping completed successfully"
     });
-
+   console.log('testing finished');
     await log();
     
   } catch (error) {
