@@ -67,7 +67,10 @@ export async function piratebayTv() {
   let inserted = 0;
 
   for (const torrent of torrents) {
-
+if (!torrent.imdb) {
+  console.log(`IMDb ID not found: ${torrent.name}`);
+  continue;
+}
     if (!torrent.info_hash) continue;
 
     const magnet =
