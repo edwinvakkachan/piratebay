@@ -147,8 +147,14 @@ const language =
   data.Language && data.Language !== "N/A"
     ? data.Language
     : null;
-
-
+const imdbVotes =
+  data.imdbVotes && data.imdbVotes !== "N/A"
+    ? parseInt(data.imdbVotes.replace(/,/g, ""), 10)
+    : null;
+const genre =
+  data.Genre && data.Genre !== "N/A"
+    ? data.Genre
+    : null;
       await pool.query(`
         UPDATE trakt_cache
         SET
@@ -169,8 +175,8 @@ const language =
         metascore,
         imdbRating,
         language,
-        data.Genre,
-        data.imdbVotes,
+        genre,
+        imdbVotes,
         imdbId
       ]);
 
