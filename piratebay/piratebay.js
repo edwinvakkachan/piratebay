@@ -14,6 +14,20 @@ export async function piratebaymovie() {
 
   for (const torrent of torrents) {
 
+const imdbId = (torrent.imdb || '').trim();
+
+if (
+  !imdbId ||
+  imdbId === 'tt0' ||
+  !/^tt\d+$/.test(imdbId)
+) {
+  console.log(`Skipping invalid IMDb ID: ${imdbId}`);
+  continue;
+}
+
+if (!torrent.info_hash) continue;
+console.log(`${torrent.name} ${torrent.imdb}`)
+
     const magnet =
       `magnet:?xt=urn:btih:${torrent.info_hash}` +
       `&dn=${encodeURIComponent(torrent.name)}`;
@@ -67,11 +81,20 @@ export async function piratebayTv() {
   let inserted = 0;
 
   for (const torrent of torrents) {
-if (!torrent.imdb) {
-  console.log(`IMDb ID not found: ${torrent.name}`);
+
+const imdbId = (torrent.imdb || '').trim();
+
+if (
+  !imdbId ||
+  imdbId === 'tt0' ||
+  !/^tt\d+$/.test(imdbId)
+) {
+  console.log(`Skipping invalid IMDb ID: ${imdbId}`);
   continue;
 }
     if (!torrent.info_hash) continue;
+
+    console.log(`${torrent.name} ${torrent.imdb}`)
 
     const magnet =
       `magnet:?xt=urn:btih:${torrent.info_hash}` +
