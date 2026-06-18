@@ -98,7 +98,8 @@ const result = await pool.query(`
 
          await pool.query(`
   UPDATE trakt_cache
-  SET omdb_status = 'omdb_not_found'
+  SET omdb_status = 'omdb_not_found',
+  metadata_updated_at = NOW()
   WHERE imdb_id = $1
 `, [imdbId]);
 
@@ -166,7 +167,8 @@ const genre =
           imdb_rating= $5,
           Language= $6,
           genre= $7,
-          imdbvotes=$8
+          imdbvotes=$8,
+          metadata_updated_at = NOW()
         WHERE imdb_id = $9
       `, [
         title,
