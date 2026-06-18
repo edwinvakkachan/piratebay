@@ -75,7 +75,7 @@ ORDER BY imdb_id
 let cacheCreated = 0;
 
  for (const torrent of torrents.rows) {
-
+console.log(`processing ${torrent.title} ${torrent.imdb_id}`)
   let existingCache = { rowCount: 0 };
 
   if (torrent.imdb_id) {

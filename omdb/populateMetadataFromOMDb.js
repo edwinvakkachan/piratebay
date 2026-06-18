@@ -12,29 +12,49 @@ export async function populateMetadataFromOMDb() {
 
   console.log("========== OMDB METADATA SYNC ==========");
 
+// const result = await pool.query(`
+//   SELECT DISTINCT imdb_id
+//   FROM trakt_cache
+//   WHERE imdb_id IS NOT NULL
+//     AND imdb_rating IS NULL
+//     AND COALESCE(omdb_status, 'pending')
+//       NOT IN ('found', 'omdb_not_found','rejected')
+//     AND (
+//       (
+//         trakt_type = 'movie'
+//         AND year >= EXTRACT(YEAR FROM CURRENT_DATE) - 1
+//         AND COALESCE(language, '') ILIKE '%English%'
+//         // AND tmdb_id IS NOT NULL
+//       )
+//       OR
+//       (
+//         trakt_type = 'tv'
+//         // AND tvdb_id IS NOT NULL
+//       )
+//     )
+//   ORDER BY imdb_id;
+// `);
+
+
 const result = await pool.query(`
   SELECT DISTINCT imdb_id
   FROM trakt_cache
   WHERE imdb_id IS NOT NULL
     AND imdb_rating IS NULL
     AND COALESCE(omdb_status, 'pending')
-      NOT IN ('found', 'omdb_not_found')
+      NOT IN ('found', 'omdb_not_found','rejected')
     AND (
       (
         trakt_type = 'movie'
         AND year >= EXTRACT(YEAR FROM CURRENT_DATE) - 1
-        AND COALESCE(language, '') ILIKE '%English%'
-        AND tmdb_id IS NOT NULL
       )
       OR
       (
         trakt_type = 'tv'
-        AND tvdb_id IS NOT NULL
       )
     )
   ORDER BY imdb_id;
 `);
-
   console.log(
     `Found ${result.rowCount} IMDb IDs to process`
   );
@@ -138,8 +158,10 @@ const language =
           trakt_type = COALESCE($3, trakt_type),
           Metascore = $4,
           imdb_rating= $5,
-          Language= $6
-        WHERE imdb_id = $7
+          Language= $6,
+          genre= $7,
+          imdbvotes=$8
+        WHERE imdb_id = $9
       `, [
         title,
         year,
@@ -147,6 +169,8 @@ const language =
         metascore,
         imdbRating,
         language,
+        data.genre,
+        data.imdbvotes,
         imdbId
       ]);
 
