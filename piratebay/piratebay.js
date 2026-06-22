@@ -41,13 +41,11 @@ console.log(`${torrent.name} ${torrent.imdb}`)
         seeders,
         leechers,
         imdb_id,
-        metadata_status,
         sent_to_qbittorrent,
         skipped_duplicate
       )
       VALUES (
         $1,$2,$3,$4,$5,$6,$7,
-        'pending',
         FALSE,
         FALSE
       )
@@ -109,13 +107,11 @@ if (
         seeders,
         leechers,
         imdb_id,
-        metadata_status,
         sent_to_qbittorrent,
         skipped_duplicate
       )
       VALUES (
         $1,$2,$3,$4,$5,$6,$7,
-        'pending',
         FALSE,
         FALSE
       )
