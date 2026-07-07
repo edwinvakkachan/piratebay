@@ -2,6 +2,8 @@ import axios from "axios";
 import pool from "../db/pool.js";
 
 export async function piratebaymovie() {
+  try {
+    
 
   const res = await axios.get(
     "https://apibay.org/q.php?q=category:201",
@@ -61,9 +63,15 @@ console.log(`${torrent.name} ${torrent.imdb}`)
       torrent.imdb,
     ]);
   }
+
+  } catch (error) {
+    console.log('error in priratebay movie function')
+  }
 }
 
 export async function piratebayTv() {
+  try {
+    
 
   console.log("\n========== PIRATE BAY TV START ==========");
 
@@ -131,4 +139,8 @@ if (
   }
 
   console.log(`TV torrents inserted: ${inserted}`);
+
+  } catch (error) {
+    console.log('error in piratebay TV function');
+  }
 }
