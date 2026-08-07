@@ -28,6 +28,7 @@ import { sonarrTable } from "./radarrSonarr/sonarrtable.js";
 import { extractEpisodeAndSeasonDetails } from "./addingtorrents/extractEpisodeAndSeasonDetails.js.js";
 import { updateMovieYears } from "./supabase/updateMovieYears.js";
 import { detectTraktTVShows } from "./supabase/detectTraktTVShows.js";
+import { clearOldTaggedTorrentItems } from "./clearOldpiratebay_movie_magnets.js";
 
 
 
@@ -58,7 +59,7 @@ async function main() {
   await populateMetadataFromOMDb(); 
   await extractEpisodeAndSeasonDetails();
 
-  
+  await clearOldTaggedTorrentItems();
 
 
    console.log('testing finished');
