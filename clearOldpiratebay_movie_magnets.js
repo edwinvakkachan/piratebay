@@ -4,7 +4,7 @@ export async function clearOldTaggedTorrentItems() {
   try {
     const result = await pool.query(`
       DELETE FROM piratebay_movie_magnets
-      WHERE created_at < NOW() - INTERVAL '90 days'
+      WHERE created_at < NOW() - INTERVAL '30 days'
     `);
 
     console.log(
