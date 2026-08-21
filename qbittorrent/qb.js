@@ -72,23 +72,7 @@ export async function moveTorrentToTop() {
 }
 
 
-export async function isQBittorrentAvailable() {
-  try {
 
-    const { data } = await qb.get("/api/v2/app/version");
-
-    console.log(`qBittorrent version: ${data}`);
-
-    return true;
-  } catch (error) {
-    console.error(
-      "qBittorrent unavailable:",
-      error.response?.data || error.message
-    );
-
-    return false;
-  }
-}
 
 export async function radarrToTorrent(magnet){
 const today = new Date().toISOString().split("T")[0];
